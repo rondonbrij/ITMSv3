@@ -1,7 +1,6 @@
 import HeroBanner from "@/components/hero-banner";
 import BookingForm from "@/components/booking-form";
 import Operators from "@/components/operators";
-import Destinations from "@/components/destinations";
 import About from "@/components/about";
 import FAQ from "@/components/faq";
 import Blog from "@/components/blog";
@@ -20,7 +19,6 @@ export default function Home() {
         <BookingForm featured />
       </div> */}
       <Operators />
-      <Destinations />
       <About />
       <FAQ />
       <Blog />

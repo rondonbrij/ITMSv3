@@ -1,48 +1,78 @@
 "use client"
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
+import * as z from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { format } from "date-fns"
-import { CalendarIcon, Check, ChevronsUpDown, MapPin, Truck, Users } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { CalendarIcon, MapPin, Truck, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { getDestinations, createBooking } from "@/lib/api"
+import { useState, useEffect } from "react"
+import { getDestinations } from "@/lib/mock-api"
 import { Destination } from "@/types/types"
 
-// Define schema for form validation
-const formSchema = z.object({
-  destination: z.string(),
-  date: z.date(),
-  vehicleType: z.enum(["BUS", "VAN"]),
-  travelType: z.enum(["Passenger", "Package"]),
+const FormSchema = z.object({
+  destination: z.string({
+    required_error: "Please select a destination.",
+  }),
+  date: z.date({
+    required_error: "Please select a date.",
+  }),
+  vehicleType: z.string({
+    required_error: "Please select a vehicle type.",
+  }),
+  transporteeType: z.string({
+    required_error: "Please select a transportee type.",
+  }),
 })
 
-function BookingForm({ featured = false }: { featured?: boolean }) {
+export default function BookingForm() {
   const router = useRouter()
-  const [open, setOpen] = React.useState(false)
-  const [inputValue, setInputValue] = React.useState("")
-  const [destinations, setDestinations] = React.useState<Destination[]>([])
+  const [destinations, setDestinations] = useState<Destination[]>([])
+  const [inputValue, setInputValue] = useState("")
+  const [open, setOpen] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
     defaultValues: {
       destination: "",
       date: new Date(),
-      vehicleType: undefined,
-      travelType: undefined,
+      vehicleType: "",
+      transporteeType: "",
     },
   })
 
-  // Fetch destinations from the API
-  React.useEffect(() => {
+  // Fetch destinations from API
+  useEffect(() => {
     const fetchDestinations = async () => {
       try {
         const response = await getDestinations()
@@ -54,174 +84,162 @@ function BookingForm({ featured = false }: { featured?: boolean }) {
     fetchDestinations()
   }, [])
 
+  // Filter destinations based on input
   const filteredDestinations = destinations.filter(destination =>
-    destination.name.toLowerCase().includes(inputValue.toLowerCase()) ||
-    destination.region.toLowerCase().includes(inputValue.toLowerCase())
+    destination.name.toLowerCase().includes(inputValue.toLowerCase())
   )
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      const bookingData = {
-        destination_id: values.destination,
-        travel_date: values.date.toISOString(),
-        vehicle_type: values.vehicleType,
-        travel_type: values.travelType,
-      }
-      const response = await createBooking(bookingData)
-      router.push(`/steptwo?bookingId=${response.data.id}`)
-    } catch (error) {
-      console.error("Failed to create booking:", error)
-    }
+  function onSubmit(values: z.infer<typeof FormSchema>) {
+    // Redirect to trip selection page with form values as query params
+    router.push(
+      `/trip-selection?destination=${encodeURIComponent(values.destination)}&date=${format(values.date, "yyyy-MM-dd")}&vehicleType=${values.vehicleType}&travelType=${values.transporteeType}`
+    )
   }
 
   return (
-    <div className={`w-full ${featured ? "bg-muted p-6 rounded-lg" : ""}`}>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col md:flex-row items-end gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-grow w-full">
-            <FormField
-              control={form.control}
-              name="destination"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn(
-                            "w-full justify-start items-center",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          <MapPin className="mr-2 h-4 w-4 shrink-0" />
-                          <span className="flex-1 text-left">
-                            {field.value
-                              ? destinations.find(
-                                  (destination) => destination.id === field.value
-                                )?.name
-                              : "Select destination"}
-                          </span>
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                      <Command>
-                        <CommandInput
-                          placeholder="Search destination"
-                          value={inputValue}
-                          onValueChange={setInputValue}
-                        />
-                        <CommandList>
-                          <CommandEmpty>No destinations found.</CommandEmpty>
-                          <CommandGroup>
-                            {filteredDestinations.map((destination) => (
-                              <CommandItem
-                                key={destination.id}
-                                value={destination.id.toString()}
-                                onSelect={() => {
-                                  field.onChange(destination.id.toString())
-                                  setOpen(false)
-                                }}
-                              >
-                                <MapPin className="mr-2 h-4 w-4" />
-                                <span>{destination.name}</span>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="flex flex-wrap gap-4">
+          <FormField
+            control={form.control}
+            name="destination"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                          "w-full justify-between",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        <MapPin className="mr-2 h-4 w-4" />
+                        {field.value
+                          ? destinations.find((destination) => destination.name === field.value)?.name
+                          : "Select destination"}
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput
+                        placeholder="Search destination..."
+                        value={inputValue}
+                        onValueChange={setInputValue}
                       />
-                    </PopoverContent>
-                  </Popover>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="vehicleType"
-              render={({ field }) => (
-                <FormItem>
-                  <Select onValueChange={field.onChange}>
+                      <CommandList>
+                        <CommandEmpty>No destination found.</CommandEmpty>
+                        <CommandGroup>
+                          {filteredDestinations.map((destination) => (
+                            <CommandItem
+                              key={destination.id}
+                              value={destination.name}
+                              onSelect={() => {
+                                form.setValue("destination", destination.name)
+                                setOpen(false)
+                              }}
+                            >
+                              <MapPin className="mr-2 h-4 w-4" />
+                              {destination.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <Popover>
+                  <PopoverTrigger asChild>
                     <FormControl>
-                      <SelectTrigger className="justify-start items-center">
-                        <Truck className="mr-2 h-4 w-4 shrink-0" />
-                        <SelectValue placeholder="Select vehicle type" />
-                      </SelectTrigger>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-between",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? format(field.value, "PPP") : "Pick a date"}
+                      </Button>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="BUS">BUS</SelectItem>
-                      <SelectItem value="VAN">VAN</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="travelType"
-              render={({ field }) => (
-                <FormItem>
-                  <Select onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="justify-start items-center">
-                        <Users className="mr-2 h-4 w-4 shrink-0" />
-                        <SelectValue placeholder="Select transportee type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Passenger">Passenger</SelectItem>
-                      <SelectItem value="Package">Package</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-          </div>
-          <Button type="submit" className="w-full md:w-auto">
-            Search
-          </Button>
-        </form>
-      </Form>
-    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date < new Date(new Date().setHours(0, 0, 0, 0))
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="vehicleType"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <Truck className="mr-2 h-4 w-4" />
+                      <SelectValue placeholder="Transport type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="BUS">BUS</SelectItem>
+                    <SelectItem value="VAN">VAN</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="transporteeType"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <Users className="mr-2 h-4 w-4" />
+                      <SelectValue placeholder="Transportee type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Passenger">Passenger</SelectItem>
+                    <SelectItem value="Package">Package</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <Button type="submit" className="w-full">Search Available Trips</Button>
+      </form>
+    </Form>
   )
 }
-
-export default BookingForm
