@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import * as z from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { format } from "date-fns"
-import { useRouter } from "next/navigation"
-import { CalendarIcon, MapPin, Truck, Users } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { format } from "date-fns";
+import { useRouter } from "next/navigation";
+import { CalendarIcon, MapPin, Truck, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import {
   Command,
   CommandEmpty,
@@ -22,23 +22,23 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { cn } from "@/lib/utils"
-import { useState, useEffect } from "react"
-import { getDestinations } from "@/lib/mock-api"
-import { Destination } from "@/types/types"
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { getDestinations } from "@/lib/mock-api";
+import { Destination } from "@/types/types";
 
 const FormSchema = z.object({
   destination: z.string({
@@ -53,13 +53,13 @@ const FormSchema = z.object({
   transporteeType: z.string({
     required_error: "Please select a transportee type.",
   }),
-})
+});
 
 export default function BookingForm() {
-  const router = useRouter()
-  const [destinations, setDestinations] = useState<Destination[]>([])
-  const [inputValue, setInputValue] = useState("")
-  const [open, setOpen] = useState(false)
+  const router = useRouter();
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [open, setOpen] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -69,31 +69,35 @@ export default function BookingForm() {
       vehicleType: "",
       transporteeType: "",
     },
-  })
+  });
 
   // Fetch destinations from API
   useEffect(() => {
     const fetchDestinations = async () => {
       try {
-        const response = await getDestinations()
-        setDestinations(response.data)
+        const response = await getDestinations();
+        setDestinations(response.data);
       } catch (error) {
-        console.error("Failed to fetch destinations:", error)
+        console.error("Failed to fetch destinations:", error);
       }
-    }
-    fetchDestinations()
-  }, [])
+    };
+    fetchDestinations();
+  }, []);
 
   // Filter destinations based on input
-  const filteredDestinations = destinations.filter(destination =>
+  const filteredDestinations = destinations.filter((destination) =>
     destination.name.toLowerCase().includes(inputValue.toLowerCase())
-  )
+  );
 
   function onSubmit(values: z.infer<typeof FormSchema>) {
     // Redirect to trip selection page with form values as query params
     router.push(
-      `/trip-selection?destination=${encodeURIComponent(values.destination)}&date=${format(values.date, "yyyy-MM-dd")}&vehicleType=${values.vehicleType}&travelType=${values.transporteeType}`
-    )
+      `/trip-selection?destination=${encodeURIComponent(
+        values.destination
+      )}&date=${format(values.date, "yyyy-MM-dd")}&vehicleType=${
+        values.vehicleType
+      }&travelType=${values.transporteeType}`
+    );
   }
 
   return (
@@ -118,7 +122,9 @@ export default function BookingForm() {
                       >
                         <MapPin className="mr-2 h-4 w-4" />
                         {field.value
-                          ? destinations.find((destination) => destination.name === field.value)?.name
+                          ? destinations.find(
+                              (destination) => destination.name === field.value
+                            )?.name
                           : "Select destination"}
                       </Button>
                     </FormControl>
@@ -138,8 +144,8 @@ export default function BookingForm() {
                               key={destination.id}
                               value={destination.name}
                               onSelect={() => {
-                                form.setValue("destination", destination.name)
-                                setOpen(false)
+                                form.setValue("destination", destination.name);
+                                setOpen(false);
                               }}
                             >
                               <MapPin className="mr-2 h-4 w-4" />
@@ -172,7 +178,9 @@ export default function BookingForm() {
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? format(field.value, "PPP") : "Pick a date"}
+                        {field.value
+                          ? format(field.value, "PPP")
+                          : "Pick a date"}
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
@@ -198,7 +206,10 @@ export default function BookingForm() {
             name="vehicleType"
             render={({ field }) => (
               <FormItem className="flex-1">
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <Truck className="mr-2 h-4 w-4" />
@@ -220,7 +231,10 @@ export default function BookingForm() {
             name="transporteeType"
             render={({ field }) => (
               <FormItem className="flex-1">
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <Users className="mr-2 h-4 w-4" />
@@ -238,8 +252,10 @@ export default function BookingForm() {
           />
         </div>
 
-        <Button type="submit" className="w-full">Search Available Trips</Button>
+        <Button type="submit" className="w-full">
+          Search Available Trips
+        </Button>
       </form>
     </Form>
-  )
+  );
 }

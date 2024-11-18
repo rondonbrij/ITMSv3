@@ -3,6 +3,19 @@ export type MockResponse<T> = {
   data: T;
 };
 
+export interface Checkpoint {
+  id: number;
+  name: string;
+  order: number;
+}
+
+export interface Route {
+  id: number;
+  name: string;
+  checkpoints: Checkpoint[];
+  direction: 'north' | 'south';
+}
+
 export interface User {
   id: number;
   username: string;
@@ -39,7 +52,10 @@ export interface Destination {
   name: string;
   description?: string;
   location: string;
+  direction: 'north' | 'south';
+  routes: Route[];
 }
+
 
 // Vehicle related types
 export interface Vehicle {
@@ -86,7 +102,7 @@ export interface Driver {
 // Trip and Booking types
 export interface Trip {
   id: number;
-  destination: Destination;
+  route: Route;
   vehicle: Vehicle;
   driver?: Driver;
   departure_time: string;

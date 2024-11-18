@@ -1,66 +1,70 @@
 // itmsv3/src/lib/mockfolder/mock-destinations.ts
 
-import { Destination } from '../../types/types';
+import { Destination, Route, Checkpoint } from '../../types/types';
 
-export const mockDestinations: Destination[] = [
+// Define checkpoints
+const southCheckpoints: Checkpoint[] = [
+  { id: 1, name: 'Aborlan', order: 1 },
+  { id: 2, name: 'Narra', order: 2 },
+  { id: 3, name: 'Abo-abo', order: 3 },
+  { id: 4, name: 'Sofronio Espanola', order: 4 },
+  { id: 5, name: 'Brookes Point', order: 5 },
+  { id: 6, name: 'Quezon', order: 4 },
+  { id: 7, name: 'Berong', order: 5 },
+  { id: 8, name: 'Rizal', order: 5 },
+  { id: 9, name: 'Bataraza', order: 6 },
+  { id: 10, name: 'Riotuba', order: 6 }
+];
+
+// Define routes
+const southRoutes: Route[] = [
   {
     id: 1,
-    name: "Cagayan de Oro City",
-    description: "The City of Golden Friendship",
-    location: "Misamis Oriental, Philippines"
+    name: 'Bataraza-Riotuba Route',
+    direction: 'south',
+    checkpoints: [
+      southCheckpoints[0], // Aborlan
+      southCheckpoints[1], // Narra
+      southCheckpoints[2], // Abo-abo
+      southCheckpoints[3], // Sofronio
+      southCheckpoints[4], // Brookes
+      southCheckpoints[8], // Bataraza
+      southCheckpoints[9]  // Riotuba
+    ]
   },
   {
     id: 2,
-    name: "Iligan City",
-    description: "City of Majestic Waterfalls",
-    location: "Lanao del Norte, Philippines"
+    name: 'Rizal Route',
+    direction: 'south',
+    checkpoints: [
+      southCheckpoints[0], // Aborlan
+      southCheckpoints[1], // Narra
+      southCheckpoints[2], // Abo-abo
+      southCheckpoints[5], // Quezon
+      southCheckpoints[7]  // Rizal
+    ]
   },
   {
     id: 3,
-    name: "Butuan City",
-    description: "Timber City of the South",
-    location: "Agusan del Norte, Philippines"
-  },
-  {
-    id: 4,
-    name: "Davao City",
-    description: "Crown Jewel of Mindanao",
-    location: "Davao del Sur, Philippines"
-  },
-  {
-    id: 5,
-    name: "General Santos City",
-    description: "Tuna Capital of the Philippines",
-    location: "South Cotabato, Philippines"
-  },
-  {
-    id: 6,
-    name: "Surigao City",
-    description: "Gateway to Mindanao",
-    location: "Surigao del Norte, Philippines"
-  },
-  {
-    id: 7,
-    name: "Valencia City",
-    description: "City of Golden Harvest",
-    location: "Bukidnon, Philippines"
-  },
-  {
-    id: 8,
-    name: "Malaybalay City",
-    description: "South Summer Capital of the Philippines",
-    location: "Bukidnon, Philippines"
-  },
-  {
-    id: 9,
-    name: "Ozamiz City",
-    description: "Gateway to Western Mindanao",
-    location: "Misamis Occidental, Philippines"
-  },
-  {
-    id: 10,
-    name: "Pagadian City",
-    description: "Little Hong Kong of the South",
-    location: "Zamboanga del Sur, Philippines"
+    name: 'Berong Route',
+    direction: 'south',
+    checkpoints: [
+      southCheckpoints[0], // Aborlan
+      southCheckpoints[1], // Narra
+      southCheckpoints[2], // Abo-abo
+      southCheckpoints[5], // Quezon
+      southCheckpoints[6]  // Berong
+    ]
   }
 ];
+
+export const mockDestinations: Destination[] = southCheckpoints.map(checkpoint => ({
+  id: checkpoint.id,
+  name: checkpoint.name,
+  description: `Destination: ${checkpoint.name}`,
+  location: "Palawan, Philippines",
+  direction: 'south',
+  routes: southRoutes.filter(route => 
+    route.checkpoints.some(cp => cp.name === checkpoint.name)
+  )
+}));
