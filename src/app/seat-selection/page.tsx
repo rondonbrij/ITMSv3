@@ -1,208 +1,105 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { BusLayout } from "@/components/seat-selection/bus-layout";
-import { VanLayout } from "@/components/seat-selection/van-layout";
-import { PassengerForm } from "@/components/seat-selection/passenger-form";
-import { WarningDialog } from "@/components/seat-selection/warning-dialog";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Seat, BookingData, PassengerDetails } from "@/types/seat-types";
-import { toast } from "@/hooks/use-toast";
-
-// Mock function to simulate fetching seat data from the backend
-const fetchSeatData = async (vehicleType: "BUS" | "VAN"): Promise<Seat[]> => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  const totalSeats = vehicleType === "BUS" ? 66 : 14;
-  return Array.from({ length: totalSeats }, (_, i) => ({
-    id: `seat-${i + 1}`,
-    number: i + 1,
-    status: Math.random() > 0.8 ? "booked" : "available",
-    isRestricted: vehicleType === "VAN" && (i === 0 || i === 1 || i === 2),
-    isFrontSeat: vehicleType === "VAN" && (i === 0 || i === 1 || i === 2),
-  }));
-};
+import { useState, useEffect } from 'react'
+import { BusLayout } from '@/components/seat-selection/bus-layout'
+import { VanLayout } from '@/components/seat-selection/van-layout'
+import { PassengerForm } from '@/components/seat-selection/passenger-form'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Seat, PassengerDetails } from "@/types/seat-types" // Add this import
 
 export default function SeatSelectionPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [bookingData, setBookingData] = useState<BookingData>({
-    destination: searchParams.get("destination") || "",
-    date: new Date(searchParams.get("date") || Date.now()),
-    vehicleType: (searchParams.get("vehicleType") as "BUS" | "VAN") || "BUS",
-    time: searchParams.get("time") || "",
-    company: searchParams.get("company") || "",
-    price: Number(searchParams.get("price")) || 0,
-    selectedSeats: [],
-    passengers: [],
-  });
-  const [seats, setSeats] = useState<Seat[]>([]);
-  const [warningDialog, setWarningDialog] = useState<{
-    open: boolean;
-    title: string;
-    description: string;
-    confirmLabel: string;
-    cancelLabel: string;
-    onConfirm: () => void;
-    onCancel: () => void;
-  }>({
-    open: false,
-    title: "",
-    description: "",
-    confirmLabel: "",
-    cancelLabel: "",
-    onConfirm: () => {},
-    onCancel: () => {},
-  });
+  const [vehicleType, setVehicleType] = useState<'BUS' | 'VAN'>('BUS')
+  const [seats, setSeats] = useState<Seat[]>([])
+  const [selectedSeats, setSelectedSeats] = useState<Seat[]>([])
+  const [passengers, setPassengers] = useState<PassengerDetails[]>([])
 
   useEffect(() => {
-    const loadSeatData = async () => {
-      const seatData = await fetchSeatData(bookingData.vehicleType);
-      setSeats(seatData);
-    };
-    loadSeatData();
-  }, [bookingData.vehicleType]);
+    // Simulating fetching seat data
+    const totalSeats = vehicleType === 'BUS' ? 66 : 15
+    const newSeats = Array.from({ length: totalSeats }, (_, i) => ({
+      id: `seat-${i + 1}`,
+      number: i + 1,
+      status: Math.random() > 0.8 ? 'booked' : 'available',
+    }))
+    setSeats(newSeats)
+  }, [vehicleType])
 
   const handleSeatClick = (clickedSeat: Seat) => {
-    if (clickedSeat.status === "booked" || clickedSeat.status === "processing")
-      return;
+    if (clickedSeat.status === 'booked') return
 
-    if (clickedSeat.isRestricted) {
-      if (bookingData.vehicleType === "VAN" && clickedSeat.isFrontSeat) {
-        setWarningDialog({
-          open: true,
-          title: "Age Restriction for Front Seats",
-          description:
-            "Front seats are reserved for passengers aged 12 and above. By selecting this seat, you confirm that the passenger meets this age requirement.",
-          confirmLabel: "I am over 12",
-          cancelLabel: "Cancel",
-          onConfirm: () => selectSeat(clickedSeat),
-          onCancel: () => setWarningDialog({ ...warningDialog, open: false }),
-        });
-      } else {
-        setWarningDialog({
-          open: true,
-          title: "Priority Seating",
-          description:
-            "This seat is reserved for passengers with disabilities, senior citizens, or pregnant women. By selecting this seat, you confirm that you meet these criteria.",
-          confirmLabel: "I Agree",
-          cancelLabel: "Cancel",
-          onConfirm: () => selectSeat(clickedSeat),
-          onCancel: () => setWarningDialog({ ...warningDialog, open: false }),
-        });
-      }
-    } else {
-      selectSeat(clickedSeat);
-    }
-  };
-
-  const selectSeat = (seat: Seat) => {
-    const updatedSeats = seats.map((s) =>
-      s.id === seat.id
-        ? { ...s, status: s.status === "selected" ? "available" : "selected" }
-        : s
-    );
-    setSeats(updatedSeats);
-    setBookingData((prev) => ({
-      ...prev,
-      selectedSeats: updatedSeats.filter((s) => s.status === "selected"),
-    }));
-  };
+    const updatedSeats = seats.map(seat =>
+      seat.id === clickedSeat.id
+        ? { ...seat, status: seat.status === 'selected' ? 'available' : 'selected' }
+        : seat
+    )
+    setSeats(updatedSeats)
+    setSelectedSeats(updatedSeats.filter(seat => seat.status === 'selected'))
+  }
 
   const handlePassengerSubmit = (data: PassengerDetails) => {
-    setBookingData((prev) => ({
-      ...prev,
-      passengers: [
-        ...prev.passengers.filter((p) => p.seatNumber !== data.seatNumber),
-        data,
-      ],
-    }));
-  };
+    setPassengers(prev => [
+      ...prev.filter(p => p.seatNumber !== data.seatNumber),
+      data
+    ])
+  }
 
-  const handleContinue = async () => {
-    if (bookingData.selectedSeats.length !== bookingData.passengers.length) {
-      toast({
-        title: "Incomplete passenger details",
-        description: "Please fill in the details for all selected seats.",
-        variant: "destructive",
-      });
-      return;
+  const handleContinue = () => {
+    if (selectedSeats.length !== passengers.length) {
+      alert('Please fill in details for all selected seats.')
+      return
     }
-
-    // Simulate sending processing status to backend
-    const processingSeats = seats.map((seat) =>
-      bookingData.selectedSeats.some((s) => s.id === seat.id)
-        ? { ...seat, status: "processing" }
-        : seat
-    );
-    setSeats(processingSeats);
-
-    // Simulate API call to update seat status
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Navigate to payment page
-    router.push(
-      `/payment?bookingData=${encodeURIComponent(JSON.stringify(bookingData))}`
-    );
-  };
+    // Here you would typically proceed to the next step (e.g., payment)
+    console.log('Proceeding with booking:', { selectedSeats, passengers })
+  }
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-4">Select Your Seats</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="container mx-auto p-6 grid md:grid-cols-2 gap-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Choose seat</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {vehicleType === 'BUS' ? (
+            <BusLayout seats={seats} onSeatClick={handleSeatClick} />
+          ) : (
+            <VanLayout seats={seats} onSeatClick={handleSeatClick} />
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Seat Map</CardTitle>
+            <CardTitle>Passenger Details</CardTitle>
           </CardHeader>
-          <CardContent>
-            {bookingData.vehicleType === "BUS" ? (
-              <BusLayout seats={seats} onSeatClick={handleSeatClick} />
-            ) : (
-              <VanLayout seats={seats} onSeatClick={handleSeatClick} />
-            )}
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <div>
-              <p>Fare per seat: ₱{bookingData.price.toFixed(2)}</p>
-              <p>
-                Total: ₱
-                {(bookingData.price * bookingData.selectedSeats.length).toFixed(
-                  2
-                )}
-              </p>
+          <CardContent className="space-y-4">
+            {selectedSeats.map(seat => (
+              <PassengerForm
+                key={seat.id}
+                seatNumber={seat.number}
+                onSubmit={handlePassengerSubmit}
+              />
+            ))}
+            <div className="border rounded-lg p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Fare per seat:</span>
+                <span>₱ 500.00</span>
+              </div>
+              <div className="flex justify-between font-bold">
+                <span>Total:</span>
+                <span>₱ {(selectedSeats.length * 500).toFixed(2)}</span>
+              </div>
             </div>
-            <Button
+            <Button 
+              className="w-full bg-black hover:bg-gray-800 text-white" 
               onClick={handleContinue}
-              disabled={bookingData.selectedSeats.length === 0}
             >
-              Continue
+              CONTINUE
             </Button>
-          </CardFooter>
+          </CardContent>
         </Card>
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Passenger Details</h2>
-          {bookingData.selectedSeats.map((seat) => (
-            <PassengerForm
-              key={seat.id}
-              seatNumber={seat.number}
-              onSubmit={handlePassengerSubmit}
-              defaultValues={bookingData.passengers.find(
-                (p) => p.seatNumber === seat.number
-              )}
-            />
-          ))}
-        </div>
       </div>
-      <WarningDialog {...warningDialog} />
     </div>
-  );
+  )
 }

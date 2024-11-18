@@ -1,47 +1,43 @@
-"use client";
-
-import { cn } from "@/lib/utils";
-import { Seat as SeatType } from "@/types/seat-types";
-
 interface SeatProps {
-  seat: SeatType;
-  onClick: (seat: SeatType) => void;
-  size?: "sm" | "md";
+  seat: {
+    number: number
+    status: 'available' | 'selected' | 'pwd' | 'processing' | 'booked' | 'driver'
+  }
+  onClick: () => void
+  size?: 'sm' | 'md'
 }
 
-export function Seat({ seat, onClick, size = "md" }: SeatProps) {
-  const seatStyles = {
-    available: "bg-white hover:bg-gray-100 border-gray-200",
-    selected: "bg-green-500 hover:bg-green-600 text-white border-green-600",
-    processing: "bg-yellow-500 text-white border-yellow-600 cursor-not-allowed",
-    booked: "bg-red-500 text-white border-red-600 cursor-not-allowed",
-    pwd: "bg-blue-500 hover:bg-blue-600 text-white border-blue-600",
-    driver: "bg-black text-white cursor-not-allowed",
-  };
+export function Seat({ seat, onClick, size = 'md' }: SeatProps) {
+  const getStatusStyles = () => {
+    switch (seat.status) {
+      case 'available':
+        return 'bg-white hover:bg-gray-100 border-gray-300'
+      case 'selected':
+        return 'bg-[#90EE90] hover:bg-[#7CCD7C] text-white border-[#7CCD7C]'
+      case 'pwd':
+        return 'bg-[#87CEEB] text-white border-[#87CEEB]'
+      case 'processing':
+        return 'bg-yellow-300 text-white border-yellow-300 cursor-not-allowed'
+      case 'booked':
+        return 'bg-red-500 text-white border-red-500 cursor-not-allowed'
+      case 'driver':
+        return 'bg-black text-white border-black cursor-not-allowed'
+      default:
+        return 'bg-white'
+    }
+  }
 
   return (
     <button
-      onClick={() =>
-        seat.status !== "booked" &&
-        seat.status !== "processing" &&
-        seat.status !== "driver" &&
-        onClick(seat)
-      }
-      disabled={
-        seat.status === "booked" ||
-        seat.status === "processing" ||
-        seat.status === "driver"
-      }
-      className={cn(
-        "relative rounded-md border-2 transition-colors",
-        size === "sm" ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm",
-        seatStyles[seat.status],
-        "hover:scale-105 transition-transform",
-        "disabled:opacity-50 disabled:cursor-not-allowed"
-      )}
-      title={`Seat ${seat.number}`}
+      onClick={onClick}
+      disabled={['booked', 'processing', 'driver'].includes(seat.status)}
+      className={`
+        ${size === 'sm' ? 'w-8 h-8 text-xs' : 'w-10 h-10 text-sm'}
+        border-2 flex items-center justify-center font-medium transition-all
+        ${getStatusStyles()}
+      `}
     >
-      {seat.number}
+      {seat.status === 'driver' ? '' : seat.number}
     </button>
-  );
+  )
 }

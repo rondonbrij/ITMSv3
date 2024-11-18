@@ -1,10 +1,10 @@
-"use client";
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-// import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { Calendar, Mail, Phone, User } from 'lucide-react'
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Form,
   FormControl,
@@ -12,12 +12,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PassengerDetails } from "@/types/seat-types";
+} from "@/components/ui/form"
 
-const phoneRegex = /^(\+63|0)[0-9]{10}$/;
+const phoneRegex = /^(\+63|0)[0-9]{10}$/
 
 const passengerSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -27,125 +24,122 @@ const passengerSchema = z.object({
   birthday: z
     .string()
     .refine((date) => !isNaN(Date.parse(date)), "Invalid date"),
-});
+})
 
 interface PassengerFormProps {
-  seatNumber: number;
-  onSubmit: (data: PassengerDetails) => void;
-  defaultValues?: Partial<PassengerDetails>;
+  seatNumber: number
+  onSubmit: (data: z.infer<typeof passengerSchema> & { seatNumber: number }) => void
 }
 
-export function PassengerForm({
-  seatNumber,
-  onSubmit,
-  defaultValues,
-}: PassengerFormProps) {
+export function PassengerForm({ seatNumber, onSubmit }: PassengerFormProps) {
   const form = useForm<z.infer<typeof passengerSchema>>({
     resolver: zodResolver(passengerSchema),
     defaultValues: {
-      firstName: defaultValues?.firstName || "",
-      lastName: defaultValues?.lastName || "",
-      email: defaultValues?.email || "",
-      phoneNumber: defaultValues?.phoneNumber || "",
-      birthday: defaultValues?.birthday
-        ? new Date(defaultValues.birthday).toISOString().split("T")[0]
-        : "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      phoneNumber: "",
+      birthday: "",
     },
-  });
+  })
 
   const handleSubmit = (values: z.infer<typeof passengerSchema>) => {
-    onSubmit({
-      ...values,
-      birthday: new Date(values.birthday),
-      seatNumber,
-    });
-  };
+    onSubmit({ ...values, seatNumber })
+  }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Passenger Details</CardTitle>
-        <Badge variant="secondary">Seat No. {seatNumber}</Badge>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="First name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Last name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email (Optional)</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="Email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phoneNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="+63 or 0 followed by 10 digits"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="birthday"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Birthday</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
-  );
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 border rounded-lg p-4">
+        <div className="flex justify-between items-center">
+          <h3 className="font-semibold">Passenger {seatNumber}</h3>
+          <Badge variant="secondary" className="bg-green-500 text-white">
+            Seat No. {seatNumber}
+          </Badge>
+        </div>
+        <p className="text-red-500 text-sm">Please enter your name as same as in id</p>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                    <Input className="pl-9" placeholder="First Name" {...field} />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                    <Input className="pl-9" placeholder="Last Name" {...field} />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <Input className="pl-9" placeholder="Email" type="email" {...field} />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="phoneNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone Number</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <Input className="pl-9" placeholder="Phone Number" {...field} />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="birthday"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Birthday</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <Input className="pl-9" type="date" {...field} />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </form>
+    </Form>
+  )
 }
