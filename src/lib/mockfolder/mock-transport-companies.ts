@@ -2,75 +2,61 @@
 
 import { TransportCompany } from '../../types/types';
 
-export const mockTransportCompanies: TransportCompany[] = [
+// Bus companies
+const busCompanies: TransportCompany[] = [
   {
     id: 1,
-    name: "Rural Transit Mindanao, Inc.",
-    address: "Bulua Terminal, Cagayan de Oro City",
-    email: "rtmi@example.com",
-    contact_number: "+63 88 123 4567"
+    name: "Cherry Bus",
+    address: "Puerto Princesa Terminal",
+    email: "cherrybus@example.com",
+    contact_number: "+63 999 123 4567"
   },
   {
     id: 2,
-    name: "Super 5 Transport Services",
-    address: "Agora Terminal, Cagayan de Oro City",
-    email: "super5@example.com",
-    contact_number: "+63 88 234 5678"
-  },
+    name: "Roro Bus",
+    address: "Puerto Princesa Terminal",
+    email: "rorobus@example.com",
+    contact_number: "+63 999 234 5678"
+  }
+];
+
+// Van companies
+const vanCompanies: TransportCompany[] = [
   {
     id: 3,
-    name: "Mandarin Transport Co.",
-    address: "Cogon Market, Cagayan de Oro City",
-    email: "mandarin@example.com",
-    contact_number: "+63 88 345 6789"
+    name: "Langgam Transport",
+    address: "Puerto Princesa Terminal",
+    email: "langgam@example.com",
+    contact_number: "+63 999 345 6789"
   },
   {
     id: 4,
-    name: "Bachelor Express, Inc.",
-    address: "Bulua Terminal, Cagayan de Oro City",
-    email: "bachelor@example.com",
-    contact_number: "+63 88 456 7890"
+    name: "Lexus Transport",
+    address: "Puerto Princesa Terminal",
+    email: "lexus@example.com",
+    contact_number: "+63 999 456 7890"
   },
   {
     id: 5,
-    name: "Pabama Transport",
-    address: "Carmen Terminal, Cagayan de Oro City",
-    email: "pabama@example.com",
-    contact_number: "+63 88 567 8901"
+    name: "Palshutex Transport",
+    address: "Puerto Princesa Terminal",
+    email: "palshutex@example.com",
+    contact_number: "+63 999 567 8901"
   },
   {
     id: 6,
-    name: "Land Car Inc.",
-    address: "Agora Terminal, Cagayan de Oro City",
-    email: "landcar@example.com",
-    contact_number: "+63 88 678 9012"
+    name: "Quezon Transport",
+    address: "Puerto Princesa Terminal",
+    email: "quezon@example.com",
+    contact_number: "+63 999 678 9012"
   },
   {
     id: 7,
-    name: "Mindanao Star Bus Transport",
-    address: "Bulua Terminal, Cagayan de Oro City",
-    email: "mindanaostar@example.com",
-    contact_number: "+63 88 789 0123"
-  },
-  {
-    id: 8,
-    name: "VP Liner Transport",
-    address: "Agora Terminal, Cagayan de Oro City",
-    email: "vpliner@example.com",
-    contact_number: "+63 88 890 1234"
-  },
-  {
-    id: 9,
-    name: "Meteor Transport Corporation",
-    address: "Carmen Terminal, Cagayan de Oro City",
-    email: "meteor@example.com",
-    contact_number: "+63 88 901 2345"
-  },
-  {
-    id: 10,
-    name: "Galaxy Express Transport",
-    address: "Bulua Terminal, Cagayan de Oro City",
-    email: "galaxy@example.com",
-    contact_number: "+63 88 012 3456"
+    name: "Barakkah Transport",
+    address: "Puerto Princesa Terminal",
+    email: "barakkah@example.com",
+    contact_number: "+63 999 789 0123"
   }
 ];
+
+export const mockTransportCompanies: TransportCompany[] = [...busCompanies, ...vanCompanies];

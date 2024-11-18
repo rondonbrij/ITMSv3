@@ -56,7 +56,6 @@ export interface Destination {
   routes: Route[];
 }
 
-
 // Vehicle related types
 export interface Vehicle {
   id: number;
@@ -100,6 +99,11 @@ export interface Driver {
 }
 
 // Trip and Booking types
+export interface CheckpointPrice {
+  checkpointId: number;
+  price: number;
+}
+
 export interface Trip {
   id: number;
   route: Route;
@@ -107,6 +111,7 @@ export interface Trip {
   driver?: Driver;
   departure_time: string;
   price: number;
+  checkpointPrices: CheckpointPrice[]; // Add checkpoint prices
   is_package: boolean;
   delivery_type: string;
   transport_company: TransportCompany;

@@ -80,7 +80,7 @@ class MockAPI {
   async createBooking(bookingData: any): Promise<MockResponse<Booking>> {
     const newBooking: Booking = {
       id: mockBookings.length + 1,
-      trip: mockTrips.find(t => t.id === bookingData.destination_id)!, // Adjust as needed
+      trip: mockTrips.find(t => t.id === bookingData.trip_id)!, // Adjust as needed
       passenger_name: bookingData.passengerName || "Unknown Passenger",
       passenger_contact: bookingData.passengerContact || "Unknown Contact",
       booking_code: `BOOK${Math.floor(100000 + Math.random() * 900000)}`,

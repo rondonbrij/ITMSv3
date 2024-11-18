@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { format, isBefore, parseISO } from "date-fns";
+import { format, isBefore, parseISO, parse } from "date-fns";
 import { CalendarIcon, MapPin, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -40,10 +40,24 @@ import { Trip, Destination, TransportCompany } from "@/types/types";
 type SortOption = "earliest" | "latest" | "cheapest";
 
 function tripIncludesDestination(trip: Trip, destinationName: string): boolean {
-  return trip.route.checkpoints.some(
-    (checkpoint) => checkpoint.name === destinationName
+  const isEndpoint = trip.route.checkpoints[trip.route.checkpoints.length - 1].name.toLowerCase() === destinationName.toLowerCase();
+  const isCheckpoint = trip.route.checkpoints.some(
+    checkpoint => checkpoint.name.toLowerCase() === destinationName.toLowerCase()
   );
+  return isEndpoint || isCheckpoint;
 }
+
+const getPriceForDestination = (trip: Trip, destination: string) => {
+  if (!destination) {
+    return trip.price;
+  }
+  const checkpoint = trip.route.checkpoints.find(cp => cp.name.toLowerCase() === destination.toLowerCase());
+  if (!checkpoint) {
+    return trip.price;
+  }
+  const checkpointPrice = trip.checkpointPrices.find(cp => cp.checkpointId === checkpoint.id);
+  return checkpointPrice ? checkpointPrice.price : trip.price;
+};
 
 export default function TripSelection() {
   const router = useRouter();
@@ -84,48 +98,73 @@ export default function TripSelection() {
     fetchCompanies();
   }, []);
 
+  // Filter companies based on vehicle type
+  const filteredCompanies = companies.filter(company => {
+    if (vehicleType === "BUS") {
+      return ["Cherry Bus", "Roro Bus"].includes(company.name);
+    }
+    if (vehicleType === "VAN") {
+      return ["Langgam Transport", "Lexus Transport", "Palshutex Transport", "Quezon Transport", "Barakkah Transport"].includes(company.name);
+    }
+    return true; // Show all companies when vehicleType is "ALL" or empty
+  });
+
   useEffect(() => {
     const fetchTrips = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const params = {
-          destination,
-          date: format(date, "yyyy-MM-dd"),
-          vehicleType,
-          direction,
-        };
-        const response = await getAvailableTrips(params);
-        let fetchedTrips = response.data as Trip[];
+        const response = await getAvailableTrips();
+        let fetchedTrips = response.data;
+
+        console.log("Fetched trips:", fetchedTrips);
+
+        // Filter by vehicle type first
+        if (vehicleType && vehicleType !== "ALL") {
+          fetchedTrips = fetchedTrips.filter(
+            (trip) => trip.vehicle && trip.vehicle.vehicle_type.toUpperCase() === vehicleType.toUpperCase()
+          );
+          console.log("Filtered by vehicle type:", fetchedTrips);
+        }
 
         // Filter trips based on direction
         if (direction) {
           fetchedTrips = fetchedTrips.filter(
             (trip) => trip.route.direction === direction
           );
+          console.log("Filtered by direction:", fetchedTrips);
         }
 
-        // Filter trips based on destination
+        // Filter trips based on destination (endpoint or checkpoint)
         if (destination) {
           fetchedTrips = fetchedTrips.filter((trip) =>
             tripIncludesDestination(trip, destination)
           );
+          console.log("Filtered by destination:", fetchedTrips);
         }
 
-        // Filter out trips that have already departed
+        // Filter out trips that have already departed for today
         const now = new Date();
+        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        
         fetchedTrips = fetchedTrips.filter((trip) => {
-          const tripTime = parseISO(
-            `${format(date, "yyyy-MM-dd")}T${trip.departure_time}`
-          );
-          return isBefore(now, tripTime);
+          if (format(date, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd')) {
+            return trip.departure_time > currentTime;
+          }
+          return true;
         });
+        console.log("Filtered by departure time:", fetchedTrips);
 
         if (selectedCompany && selectedCompany !== "all") {
           fetchedTrips = fetchedTrips.filter(
             (trip) => trip.transport_company.name === selectedCompany
           );
+          console.log("Filtered by company:", fetchedTrips);
         }
+
+        // Filter out trips with no available seats
+        fetchedTrips = fetchedTrips.filter((trip) => trip.vehicle && trip.vehicle.capacity > 0);
+        console.log("Filtered by available seats:", fetchedTrips);
 
         switch (sortBy) {
           case "earliest":
@@ -142,6 +181,7 @@ export default function TripSelection() {
             fetchedTrips.sort((a, b) => a.price - b.price);
             break;
         }
+        console.log("Sorted trips:", fetchedTrips);
 
         setTrips(fetchedTrips);
       } catch (error) {
@@ -225,12 +265,16 @@ export default function TripSelection() {
             </PopoverContent>
           </Popover>
 
-          <Select value={vehicleType} onValueChange={setVehicleType}>
+          <Select value={vehicleType} onValueChange={(value) => {
+            setVehicleType(value);
+            setSelectedCompany("all"); // Reset company selection when transport type changes
+          }}>
             <SelectTrigger className="w-[200px]">
               <Truck className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Transport type" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="ALL">All Types</SelectItem>
               <SelectItem value="BUS">Bus</SelectItem>
               <SelectItem value="VAN">Van</SelectItem>
             </SelectContent>
@@ -259,7 +303,7 @@ export default function TripSelection() {
           </SelectTrigger>
           <SelectContent className="max-h-[200px] overflow-y-auto">
             <SelectItem value="all">All Companies</SelectItem>
-            {companies.map((company) => (
+            {filteredCompanies.map((company) => (
               <SelectItem key={company.id} value={company.name}>
                 {company.name}
               </SelectItem>
@@ -287,6 +331,7 @@ export default function TripSelection() {
               <TableRow>
                 <TableHead>Time</TableHead>
                 <TableHead>Company</TableHead>
+                <TableHead>Route</TableHead>
                 <TableHead>Seats left</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead className="text-right">Action</TableHead>
@@ -296,16 +341,12 @@ export default function TripSelection() {
               {trips.map((trip) => (
                 <TableRow key={trip.id}>
                   <TableCell>
-                    {format(
-                      parseISO(
-                        `${format(date, "yyyy-MM-dd")}T${trip.departure_time}`
-                      ),
-                      "hh:mm a"
-                    )}
+                    {format(parse(trip.departure_time, "HH:mm", new Date()), "hh:mm a")} {/* Format time with AM/PM */}
                   </TableCell>
                   <TableCell>{trip.transport_company.name}</TableCell>
-                  <TableCell>{trip.vehicle.capacity}</TableCell>
-                  <TableCell>₱{trip.price.toFixed(2)}</TableCell>
+                  <TableCell>{trip.route.name}</TableCell>
+                  <TableCell>{trip.vehicle ? trip.vehicle.capacity : 'N/A'}</TableCell>
+                  <TableCell>₱{getPriceForDestination(trip, destination).toFixed(2)}</TableCell> {/* Display price based on destination */}
                   <TableCell className="text-right">
                     <Button
                       onClick={() =>

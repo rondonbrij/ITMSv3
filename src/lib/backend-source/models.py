@@ -1,9 +1,12 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 import random
 import string
 import os
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.contrib.contenttypes.models import ContentType
 
 # Helper function to generate a unique booking code
 def generate_booking_code():
@@ -41,11 +44,12 @@ class Vehicle(models.Model):
     # Additional Fields
     ltt_number = models.CharField(max_length=50, blank=True, null=True)
     lto_number = models.CharField(max_length=50, blank=True, null=True)
-    franchise_number = models.CharField(max_length=50, blank=True, null=True)
+    franchise_number = models.CharField(max_length=50, blank=True, null=True, choices=[('on_process', 'On Process')])
     STATUS_CHOICES = [('parked', 'Parked'), ('maintenance', 'Maintenance'), ('operational', 'Operational')]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='operational')
     violation_count = models.IntegerField(default=0)
     picture = models.ImageField(upload_to='vehicle_pictures/', null=True, blank=True)
+    operator = models.CharField(max_length=100, default="Unknown Operator")
 
     def __str__(self):
         return f"{self.vehicle_type} {self.model_name} ({self.year})"
@@ -78,17 +82,12 @@ class Driver(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_terminal')
     last_nfc_tap_time = models.DateTimeField(null=True, blank=True)  # To track the last NFC tap timestamp
     profile_picture = models.ImageField(upload_to='driver_pictures/', null=True, blank=True)
-    applicant = models.CharField(max_length=100, default="Unknown Applicant")
     citizenship = models.CharField(max_length=100, default="Unknown Citizenship")
     address = models.CharField(max_length=255, default="Unknown Address")
     name_of_vehicle = models.CharField(max_length=100, default="Unknown Vehicle")
     destination = models.CharField(max_length=100, default="Unknown Destination")
-    type_of_vehicle = models.CharField(max_length=100, default="Unknown Type")
-    seating_capacity = models.PositiveIntegerField(default=0)
-    franchise_number = models.CharField(max_length=50, default="Unknown Franchise")
-    plate_number = models.CharField(max_length=20, default="Unknown Plate")
-    name_of_driver = models.CharField(max_length=100, default="Unknown Driver")
-    conductor_name = models.CharField(max_length=100, default="Unknown Conductor")
+    TYPE_CHOICES = [('operator', 'Operator'), ('rounder', 'Rounder')]
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='operator')
 
     def __str__(self):
         return self.name
@@ -167,7 +166,6 @@ class PaymentProof(models.Model):
     proof_image = models.ImageField(upload_to='payment_proofs/')
     submitted_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    image = models.ImageField(upload_to='payment_proofs/')
 
     def __str__(self):
         return f"Payment for {self.booking.booking_code}"
@@ -203,25 +201,25 @@ class Chat(models.Model):
         return f"Message from {self.sender.username} to {self.receiver.username} at {self.timestamp}"
 
 class UserProfile(models.Model):
-    ROLE_CHOICES = [
-        ('admin', 'Admin'),
-        ('company_rep', 'Company Representative'),
-        ('ltt_admin', 'LTT Admin'),
-    ]
-    PERMISSION_LEVELS = [
-        (1, 'Read-only'),
-        (2, 'Manager'),
-        (3, 'Super Admin'),
-    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     transport_company = models.ForeignKey('TransportCompany', on_delete=models.CASCADE, null=True, blank=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='company_rep')
-    permissions_level = models.IntegerField(choices=PERMISSION_LEVELS, default=1)
     backup_email = models.EmailField(blank=True, null=True)
     backup_phone = models.CharField(max_length=15, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+        # Assign all permissions to the new user
+        permissions = Permission.objects.all()
+        instance.user_permissions.set(permissions)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.userprofile.save()
 
 class CancellationRequest(models.Model):
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='cancellations')

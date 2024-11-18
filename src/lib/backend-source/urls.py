@@ -16,6 +16,13 @@ router.register(r'bookings', views.BookingViewSet, basename='booking')
 router.register(r'user-profiles', views.UserProfileViewSet, basename='userprofile')
 router.register(r'driver-applications', views.DriverApplicationViewSet, basename='driverapplication')
 
+router.register(r'admin/vehicles', views.AdminVehicleViewSet, basename='admin-vehicle')
+router.register(r'admin/drivers', views.AdminDriverViewSet, basename='admin-driver')
+router.register(r'admin/trips', views.AdminTripViewSet, basename='admin-trip')
+router.register(r'admin/bookings', views.AdminBookingViewSet, basename='admin-booking')
+router.register(r'admin/user-profiles', views.AdminUserProfileViewSet, basename='admin-userprofile')
+router.register(r'admin/driver-applications', views.AdminDriverApplicationViewSet, basename='admin-driverapplication')
+
 # Define all other URL patterns here
 urlpatterns = [
     # Passenger-facing routes
@@ -97,4 +104,7 @@ urlpatterns = [
 
     # Violation submission route
     path('api/submit-violation/', submit_violation, name='submit_violation'),
+
+    path('admin/analytics/', views.TerminalAnalyticsView.as_view(), name='terminal_analytics'),
+    path('ws/admin-notifications/', views.AdminNotificationConsumer.as_asgi()),
 ] + router.urls

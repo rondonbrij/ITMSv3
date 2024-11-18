@@ -2,7 +2,7 @@
 
 import { Destination, Route, Checkpoint } from '../../types/types';
 
-// Define checkpoints
+// Define checkpoints in order
 const southCheckpoints: Checkpoint[] = [
   { id: 1, name: 'Aborlan', order: 1 },
   { id: 2, name: 'Narra', order: 2 },
@@ -16,7 +16,7 @@ const southCheckpoints: Checkpoint[] = [
   { id: 10, name: 'Riotuba', order: 6 }
 ];
 
-// Define routes
+// Define routes with their respective checkpoints
 const southRoutes: Route[] = [
   {
     id: 1,
@@ -58,6 +58,7 @@ const southRoutes: Route[] = [
   }
 ];
 
+// Create destinations map where each checkpoint can be a destination
 export const mockDestinations: Destination[] = southCheckpoints.map(checkpoint => ({
   id: checkpoint.id,
   name: checkpoint.name,
