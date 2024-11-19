@@ -67,7 +67,7 @@ export function PassengerForm({
           </Badge>
         </div>
         <p className="text-red-500 text-sm">
-          Please enter your name as same as in id
+          Please enter your name as stated in your ID.
         </p>
         <div className="grid grid-cols-2 gap-4">
           <FormField

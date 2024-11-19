@@ -22,6 +22,7 @@ export default function SeatSelectionPage() {
   const [passengers, setPassengers] = useState<PassengerDetails[]>([]);
   const [farePerSeat, setFarePerSeat] = useState<number>(0);
   const [bookedSeats, setBookedSeats] = useState<number[]>([]); // New state to hold booked seat numbers
+  const [completedForms, setCompletedForms] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const fetchTripDetails = async () => {
@@ -31,22 +32,32 @@ export default function SeatSelectionPage() {
           const trip = response.data;
           setVehicleType(trip.vehicle.vehicle_type as "BUS" | "VAN");
 
-          // Calculate fare based on destination/checkpoint
-          if (destination) {
-            const checkpoint = trip.route.checkpoints.find(
-              (cp) => cp.name.toLowerCase() === destination.toLowerCase()
+          // If no destination selected, use the endpoint (last checkpoint)
+          if (!destination) {
+            const endpoint =
+              trip.route.checkpoints[trip.route.checkpoints.length - 1];
+            const endpointPrice = trip.checkpointPrices.find(
+              (cp) => cp.checkpointId === endpoint.id
             );
-            if (checkpoint) {
-              const checkpointPrice = trip.checkpointPrices.find(
-                (cp) => cp.checkpointId === checkpoint.id
-              );
-              if (checkpointPrice) {
-                setFarePerSeat(checkpointPrice.price);
-                return;
-              }
+            setFarePerSeat(endpointPrice ? endpointPrice.price : trip.price);
+            return;
+          }
+
+          // If destination is selected, find the checkpoint price
+          const checkpoint = trip.route.checkpoints.find(
+            (cp) => cp.name.toLowerCase() === destination.toLowerCase()
+          );
+          if (checkpoint) {
+            const checkpointPrice = trip.checkpointPrices.find(
+              (cp) => cp.checkpointId === checkpoint.id
+            );
+            if (checkpointPrice) {
+              setFarePerSeat(checkpointPrice.price);
+              return;
             }
           }
-          // If no specific destination or checkpoint price found, use full trip price
+
+          // Fallback to trip price if no prices found
           setFarePerSeat(trip.price);
         } catch (error) {
           console.error("Failed to fetch trip details:", error);
@@ -105,6 +116,12 @@ export default function SeatSelectionPage() {
       updatedSelectedSeats = selectedSeats.filter(
         (seat) => seat.id !== clickedSeat.id
       );
+      // Remove from completed forms when deselecting
+      setCompletedForms((prev) => {
+        const next = new Set(prev);
+        next.delete(clickedSeat.number);
+        return next;
+      });
     } else {
       // Select the seat
       updatedSeats = seats.map((seat) =>
@@ -125,13 +142,21 @@ export default function SeatSelectionPage() {
       ...prev.filter((p) => p.seatNumber !== data.seatNumber),
       data,
     ]);
+    // Track completed forms by seat number
+    setCompletedForms((prev) => new Set([...prev, data.seatNumber]));
   };
 
   const handleContinue = () => {
-    if (selectedSeats.length !== passengers.length) {
+    // Check if all selected seats have completed forms
+    const allFormsCompleted = selectedSeats.every((seat) =>
+      completedForms.has(seat.number)
+    );
+
+    if (!allFormsCompleted) {
       alert("Please fill in details for all selected seats.");
       return;
     }
+
     // Here you would typically proceed to the next step (e.g., payment)
     console.log("Proceeding with booking:", { selectedSeats, passengers });
   };
