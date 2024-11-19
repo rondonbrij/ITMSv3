@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { format, isBefore, parseISO, parse } from "date-fns";
+import { format, parse } from "date-fns";
 import { CalendarIcon, MapPin, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -40,9 +40,13 @@ import { Trip, Destination, TransportCompany } from "@/types/types";
 type SortOption = "earliest" | "latest" | "cheapest";
 
 function tripIncludesDestination(trip: Trip, destinationName: string): boolean {
-  const isEndpoint = trip.route.checkpoints[trip.route.checkpoints.length - 1].name.toLowerCase() === destinationName.toLowerCase();
+  const isEndpoint =
+    trip.route.checkpoints[
+      trip.route.checkpoints.length - 1
+    ].name.toLowerCase() === destinationName.toLowerCase();
   const isCheckpoint = trip.route.checkpoints.some(
-    checkpoint => checkpoint.name.toLowerCase() === destinationName.toLowerCase()
+    (checkpoint) =>
+      checkpoint.name.toLowerCase() === destinationName.toLowerCase()
   );
   return isEndpoint || isCheckpoint;
 }
@@ -51,11 +55,15 @@ const getPriceForDestination = (trip: Trip, destination: string) => {
   if (!destination) {
     return trip.price;
   }
-  const checkpoint = trip.route.checkpoints.find(cp => cp.name.toLowerCase() === destination.toLowerCase());
+  const checkpoint = trip.route.checkpoints.find(
+    (cp) => cp.name.toLowerCase() === destination.toLowerCase()
+  );
   if (!checkpoint) {
     return trip.price;
   }
-  const checkpointPrice = trip.checkpointPrices.find(cp => cp.checkpointId === checkpoint.id);
+  const checkpointPrice = trip.checkpointPrices.find(
+    (cp) => cp.checkpointId === checkpoint.id
+  );
   return checkpointPrice ? checkpointPrice.price : trip.price;
 };
 
@@ -68,9 +76,6 @@ export default function TripSelection() {
   );
   const [date, setDate] = useState<Date>(
     searchParams.get("date") ? new Date(searchParams.get("date")!) : new Date()
-  );
-  const [direction, setDirection] = useState(
-    searchParams.get("direction") || ""
   );
   const [vehicleType, setVehicleType] = useState(
     searchParams.get("vehicleType") || ""
@@ -99,12 +104,18 @@ export default function TripSelection() {
   }, []);
 
   // Filter companies based on vehicle type
-  const filteredCompanies = companies.filter(company => {
+  const filteredCompanies = companies.filter((company) => {
     if (vehicleType === "BUS") {
       return ["Cherry Bus", "Roro Bus"].includes(company.name);
     }
     if (vehicleType === "VAN") {
-      return ["Langgam Transport", "Lexus Transport", "Palshutex Transport", "Quezon Transport", "Barakkah Transport"].includes(company.name);
+      return [
+        "Langgam Transport",
+        "Lexus Transport",
+        "Palshutex Transport",
+        "Quezon Transport",
+        "Barakkah Transport",
+      ].includes(company.name);
     }
     return true; // Show all companies when vehicleType is "ALL" or empty
   });
@@ -122,17 +133,12 @@ export default function TripSelection() {
         // Filter by vehicle type first
         if (vehicleType && vehicleType !== "ALL") {
           fetchedTrips = fetchedTrips.filter(
-            (trip) => trip.vehicle && trip.vehicle.vehicle_type.toUpperCase() === vehicleType.toUpperCase()
+            (trip) =>
+              trip.vehicle &&
+              trip.vehicle.vehicle_type.toUpperCase() ===
+                vehicleType.toUpperCase()
           );
           console.log("Filtered by vehicle type:", fetchedTrips);
-        }
-
-        // Filter trips based on direction
-        if (direction) {
-          fetchedTrips = fetchedTrips.filter(
-            (trip) => trip.route.direction === direction
-          );
-          console.log("Filtered by direction:", fetchedTrips);
         }
 
         // Filter trips based on destination (endpoint or checkpoint)
@@ -145,10 +151,13 @@ export default function TripSelection() {
 
         // Filter out trips that have already departed for today
         const now = new Date();
-        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        
+        const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`;
+
         fetchedTrips = fetchedTrips.filter((trip) => {
-          if (format(date, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd')) {
+          if (format(date, "yyyy-MM-dd") === format(now, "yyyy-MM-dd")) {
             return trip.departure_time > currentTime;
           }
           return true;
@@ -163,7 +172,9 @@ export default function TripSelection() {
         }
 
         // Filter out trips with no available seats
-        fetchedTrips = fetchedTrips.filter((trip) => trip.vehicle && trip.vehicle.capacity > 0);
+        fetchedTrips = fetchedTrips.filter(
+          (trip) => trip.vehicle && trip.vehicle.capacity > 0
+        );
         console.log("Filtered by available seats:", fetchedTrips);
 
         switch (sortBy) {
@@ -193,7 +204,7 @@ export default function TripSelection() {
     };
 
     fetchTrips();
-  }, [destination, date, vehicleType, direction, sortBy, selectedCompany]);
+  }, [destination, date, vehicleType, sortBy, selectedCompany]);
 
   useEffect(() => {
     const fetchDestinations = async () => {
@@ -265,10 +276,13 @@ export default function TripSelection() {
             </PopoverContent>
           </Popover>
 
-          <Select value={vehicleType} onValueChange={(value) => {
-            setVehicleType(value);
-            setSelectedCompany("all"); // Reset company selection when transport type changes
-          }}>
+          <Select
+            value={vehicleType}
+            onValueChange={(value) => {
+              setVehicleType(value);
+              setSelectedCompany("all"); // Reset company selection when transport type changes
+            }}
+          >
             <SelectTrigger className="w-[200px]">
               <Truck className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Transport type" />
@@ -341,16 +355,25 @@ export default function TripSelection() {
               {trips.map((trip) => (
                 <TableRow key={trip.id}>
                   <TableCell>
-                    {format(parse(trip.departure_time, "HH:mm", new Date()), "hh:mm a")} {/* Format time with AM/PM */}
+                    {format(
+                      parse(trip.departure_time, "HH:mm", new Date()),
+                      "hh:mm a"
+                    )}
                   </TableCell>
                   <TableCell>{trip.transport_company.name}</TableCell>
                   <TableCell>{trip.route.name}</TableCell>
-                  <TableCell>{trip.vehicle ? trip.vehicle.capacity : 'N/A'}</TableCell>
-                  <TableCell>₱{getPriceForDestination(trip, destination).toFixed(2)}</TableCell> {/* Display price based on destination */}
+                  <TableCell>
+                    {trip.vehicle ? trip.vehicle.capacity : "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    ₱{getPriceForDestination(trip, destination).toFixed(2)}
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
                       onClick={() =>
-                        router.push(`/seat-selection?tripId=${trip.id}`)
+                        router.push(
+                          `/seat-selection?tripId=${trip.id}&destination=${destination}`
+                        )
                       }
                       className="bg-emerald-500 hover:bg-emerald-600 text-white"
                     >
