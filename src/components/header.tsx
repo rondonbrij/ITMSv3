@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { MenuIcon } from "lucide-react";
+import { Menu } from "lucide-react";
+import VisuallyHidden from "@/components/ui/visually-hidden";
+import { DialogTitle } from "@/components/ui/dialog";
 
 const Header: React.FC = () => {
   const router = useRouter();
@@ -17,9 +19,9 @@ const Header: React.FC = () => {
   };
 
   const navItems = [
-    { href: "/", label: "Home" },
-    { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact us" },
+    { href: "/", label: "HOME" },
+    { href: "/about", label: "ABOUT" },
+    { href: "/contact", label: "CONTACT" },
   ];
 
   const NavLinks = () => (
@@ -28,7 +30,7 @@ const Header: React.FC = () => {
         <Link
           key={item.href}
           href={item.href}
-          className="text-black hover:text-blue-400 transition-colors"
+          className="text-black font-bold hover:text-blue-400 transition-colors"
           onClick={() => setIsOpen(false)}
         >
           {item.label}
@@ -38,7 +40,7 @@ const Header: React.FC = () => {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-white shadow-md">
       <div className="container flex mx-auto px-4 h-20 items-center justify-between">
         <div
           className="flex items-center space-x-2 cursor-pointer"
@@ -51,17 +53,25 @@ const Header: React.FC = () => {
           <NavLinks />
         </nav>
         <div className="flex items-center gap-4">
-          <Button onClick={toggleLanguage} variant="outline" size="sm">
+          <Button
+            onClick={toggleLanguage}
+            variant="outline"
+            size="sm"
+            className="hidden md:block"
+          >
             {language === "en" ? "English" : "Filipino"}
           </Button>
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="md:hidden">
-                <MenuIcon className="h-6 w-6" />
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-8 w-8" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <VisuallyHidden>
+                <DialogTitle>Navigation Menu</DialogTitle>
+              </VisuallyHidden>
               <nav className="flex flex-col gap-4">
                 <NavLinks />
                 <Button
