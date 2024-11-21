@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
-import VisuallyHidden from "@/components/ui/visually-hidden";
-import { DialogTitle } from "@/components/ui/dialog";
+import { MenuIcon } from "lucide-react";
 
 const Header: React.FC = () => {
   const router = useRouter();
@@ -19,9 +18,9 @@ const Header: React.FC = () => {
   };
 
   const navItems = [
-    { href: "/", label: "HOME" },
-    { href: "/about", label: "ABOUT" },
-    { href: "/contact", label: "CONTACT" },
+    { href: "/", label: "Home" },
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact us" },
   ];
 
   const NavLinks = () => (
@@ -30,7 +29,7 @@ const Header: React.FC = () => {
         <Link
           key={item.href}
           href={item.href}
-          className="text-black font-bold hover:text-blue-400 transition-colors"
+          className="text-black hover:text-blue-400 transition-colors"
           onClick={() => setIsOpen(false)}
         >
           {item.label}
@@ -46,32 +45,32 @@ const Header: React.FC = () => {
           className="flex items-center space-x-2 cursor-pointer"
           onClick={() => router.push("/")}
         >
-          <div className="w-8 h-8 bg-yellow-400 rounded-lg" />
-          <span className="text-black font-bold text-xl">Irawan Terminal</span>
+          <Image
+            src="/images/ppltlogo.svg"
+            alt="PPLT Logo"
+            width={50}
+            height={50}
+            className="rounded-lg"
+          />
+          <span className="text-blue-600 hover:text-yellow-400 font-bold text-3xl transition-colors">
+            Irawan Terminal
+          </span>
         </div>
         <nav className="hidden md:flex gap-6">
           <NavLinks />
         </nav>
         <div className="flex items-center gap-4">
-          <Button
-            onClick={toggleLanguage}
-            variant="outline"
-            size="sm"
-            className="hidden md:block"
-          >
+          <Button onClick={toggleLanguage} variant="outline" size="sm">
             {language === "en" ? "English" : "Filipino"}
           </Button>
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-8 w-8" />
+              <Button variant="outline" size="icon" className="md:hidden">
+                <MenuIcon className="h-6 w-6" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <VisuallyHidden>
-                <DialogTitle>Navigation Menu</DialogTitle>
-              </VisuallyHidden>
               <nav className="flex flex-col gap-4">
                 <NavLinks />
                 <Button

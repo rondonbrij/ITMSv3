@@ -13,7 +13,7 @@ function HeroBanner() {
   return (
     <section className="relative min-h-screen w-full flex items-center justify-center">
       <div className="absolute inset-0 bg-cover bg-center banner">
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-blue-600/50 to-yellow-500/50" />
       </div>
       <div className="container relative w-full flex flex-col items-center justify-center text-center text-white px-5">
         <h1 className="text-4xl md:text-6xl font-bold mb-4">

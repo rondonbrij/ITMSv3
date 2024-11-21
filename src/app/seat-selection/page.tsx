@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams, useRouter } from "next/navigation"; // Added useRouter
 import { BusLayout } from "@/components/seat-selection/bus-layout";
 import { VanLayout } from "@/components/seat-selection/van-layout";
-import { PassengerForm } from "@/components/seat-selection/passenger-form";
+import {
+  PassengerForm,
+  PassengerFormHandles,
+} from "@/components/seat-selection/passenger-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Seat, PassengerDetails } from "@/types/seat-types";
@@ -23,6 +26,12 @@ export default function SeatSelectionPage() {
   const [farePerSeat, setFarePerSeat] = useState<number>(0);
   const [bookedSeats, setBookedSeats] = useState<number[]>([]); // New state to hold booked seat numbers
   const [completedForms, setCompletedForms] = useState<Set<number>>(new Set());
+  const router = useRouter(); // Initialize router
+
+  // Store refs to each PassengerForm
+  const passengerFormRefs = useRef<Map<number, PassengerFormHandles>>(
+    new Map()
+  );
 
   useEffect(() => {
     const fetchTripDetails = async () => {
@@ -137,28 +146,67 @@ export default function SeatSelectionPage() {
     setSelectedSeats(updatedSelectedSeats);
   };
 
+  // Modify handlePassengerSubmit to ensure correct data types
   const handlePassengerSubmit = (data: PassengerDetails) => {
+    const updatedData = {
+      ...data,
+      birthday: new Date(data.birthday),
+      seatNumber: Number(data.seatNumber),
+    };
     setPassengers((prev) => [
-      ...prev.filter((p) => p.seatNumber !== data.seatNumber),
-      data,
+      ...prev.filter((p) => p.seatNumber !== updatedData.seatNumber),
+      updatedData,
     ]);
-    // Track completed forms by seat number
-    setCompletedForms((prev) => new Set([...prev, data.seatNumber]));
+    setCompletedForms((prev) => new Set([...prev, updatedData.seatNumber]));
   };
 
-  const handleContinue = () => {
-    // Check if all selected seats have completed forms
-    const allFormsCompleted = selectedSeats.every((seat) =>
-      completedForms.has(seat.number)
-    );
+  const handleContinue = async () => {
+    let allFormsCompleted = true;
+    const passengersData: PassengerDetails[] = [];
 
-    if (!allFormsCompleted) {
+    for (const seat of selectedSeats) {
+      const formRef = passengerFormRefs.current.get(seat.number);
+      if (formRef) {
+        const isValid = await formRef.trigger();
+        if (isValid) {
+          const values = formRef.getValues();
+          passengersData.push({
+            ...values,
+            birthday: new Date(values.birthday),
+            seatNumber: seat.number,
+          });
+        } else {
+          allFormsCompleted = false;
+          break;
+        }
+      } else {
+        allFormsCompleted = false;
+        break;
+      }
+    }
+
+    if (!allFormsCompleted || passengersData.length !== selectedSeats.length) {
       alert("Please fill in details for all selected seats.");
       return;
     }
 
-    // Here you would typically proceed to the next step (e.g., payment)
-    console.log("Proceeding with booking:", { selectedSeats, passengers });
+    // All forms are valid, proceed
+    setPassengers(passengersData);
+
+    // Store booking data in localStorage
+    localStorage.setItem(
+      "bookingData",
+      JSON.stringify({
+        selectedSeats,
+        passengers: passengersData,
+        tripId,
+        destination,
+        farePerSeat,
+      })
+    );
+
+    // Navigate to the payment page
+    router.push("/payment");
   };
 
   return (
@@ -187,7 +235,13 @@ export default function SeatSelectionPage() {
                 key={seat.id}
                 passengerNumber={index + 1} // Assign based on selection order
                 seatNumber={seat.number}
-                onSubmit={handlePassengerSubmit}
+                ref={(ref) => {
+                  if (ref) {
+                    passengerFormRefs.current.set(seat.number, ref);
+                  } else {
+                    passengerFormRefs.current.delete(seat.number);
+                  }
+                }}
               />
             ))}
             <div className="border rounded-lg p-4 space-y-2">

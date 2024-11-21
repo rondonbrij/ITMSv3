@@ -72,23 +72,13 @@ body {
 }
 
 .banner {
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent),
+  background: linear-gradient(
+      to top,
+      rgba(37, 99, 235, 0.7),
+      rgba(234, 179, 8, 0.7)
+    ),
     url("/images/terminal.jpg/?height=600&width=1200");
   background-repeat: no-repeat;
   background-size: cover;
   filter: blur(1px);
-}
-
-@layer utilities {
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    border: 0;
-    clip: rect(0, 0, 0, 0);
-    overflow: hidden;
-    white-space: nowrap;
-  }
 }
