@@ -36,10 +36,12 @@ import {
 } from "@/components/ui/table";
 import { getAvailableTrips, getDestinations, mockAPI } from "@/lib/mock-api";
 import { Trip, Destination, TransportCompany } from "@/types/types";
+import LoadingSpinner from "@/components/loading-spinner";
 
 type SortOption = "earliest" | "latest" | "cheapest";
 
 function tripIncludesDestination(trip: Trip, destinationName: string): boolean {
+  if (!destinationName) return true;
   const isEndpoint =
     trip.route.checkpoints[
       trip.route.checkpoints.length - 1
@@ -71,13 +73,13 @@ export default function TripSelection() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [destination, setDestination] = useState(
+  const [destination, setDestination] = useState<string>(
     searchParams.get("destination") || ""
   );
   const [date, setDate] = useState<Date>(
     searchParams.get("date") ? new Date(searchParams.get("date")!) : new Date()
   );
-  const [vehicleType, setVehicleType] = useState(
+  const [vehicleType, setVehicleType] = useState<string>(
     searchParams.get("vehicleType") || ""
   );
   const [sortBy, setSortBy] = useState<SortOption>("earliest");
@@ -85,7 +87,7 @@ export default function TripSelection() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [companies, setCompanies] = useState<TransportCompany[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -103,7 +105,6 @@ export default function TripSelection() {
     fetchCompanies();
   }, []);
 
-  // Filter companies based on vehicle type
   const filteredCompanies = companies.filter((company) => {
     if (vehicleType === "BUS") {
       return ["Cherry Bus", "Roro Bus"].includes(company.name);
@@ -117,7 +118,7 @@ export default function TripSelection() {
         "Barakkah Transport",
       ].includes(company.name);
     }
-    return true; // Show all companies when vehicleType is "ALL" or empty
+    return true;
   });
 
   useEffect(() => {
@@ -128,9 +129,6 @@ export default function TripSelection() {
         const response = await getAvailableTrips();
         let fetchedTrips = response.data;
 
-        console.log("Fetched trips:", fetchedTrips);
-
-        // Filter by vehicle type first
         if (vehicleType && vehicleType !== "ALL") {
           fetchedTrips = fetchedTrips.filter(
             (trip) =>
@@ -138,18 +136,14 @@ export default function TripSelection() {
               trip.vehicle.vehicle_type.toUpperCase() ===
                 vehicleType.toUpperCase()
           );
-          console.log("Filtered by vehicle type:", fetchedTrips);
         }
 
-        // Filter trips based on destination (endpoint or checkpoint)
         if (destination) {
           fetchedTrips = fetchedTrips.filter((trip) =>
             tripIncludesDestination(trip, destination)
           );
-          console.log("Filtered by destination:", fetchedTrips);
         }
 
-        // Filter out trips that have already departed for today
         const now = new Date();
         const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
           .getMinutes()
@@ -162,20 +156,16 @@ export default function TripSelection() {
           }
           return true;
         });
-        console.log("Filtered by departure time:", fetchedTrips);
 
         if (selectedCompany && selectedCompany !== "all") {
           fetchedTrips = fetchedTrips.filter(
             (trip) => trip.transport_company.name === selectedCompany
           );
-          console.log("Filtered by company:", fetchedTrips);
         }
 
-        // Filter out trips with no available seats
         fetchedTrips = fetchedTrips.filter(
           (trip) => trip.vehicle && trip.vehicle.capacity > 0
         );
-        console.log("Filtered by available seats:", fetchedTrips);
 
         switch (sortBy) {
           case "earliest":
@@ -192,7 +182,6 @@ export default function TripSelection() {
             fetchedTrips.sort((a, b) => a.price - b.price);
             break;
         }
-        console.log("Sorted trips:", fetchedTrips);
 
         setTrips(fetchedTrips);
       } catch (error) {
@@ -220,12 +209,15 @@ export default function TripSelection() {
   }, []);
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex flex-wrap gap-4 flex-1">
+    <div className="container mx-auto py-8 px-4 space-y-8 bg-white">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center justify-between">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4 flex-1 w-full">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[200px] justify-start">
+              <Button
+                variant="outline"
+                className="w-full sm:w-[200px] justify-start"
+              >
                 <MapPin className="mr-2 h-4 w-4" />
                 {destination || "Select destination"}
               </Button>
@@ -256,7 +248,10 @@ export default function TripSelection() {
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[200px] justify-start">
+              <Button
+                variant="outline"
+                className="w-full sm:w-[200px] justify-start"
+              >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {format(date, "PPP")}
               </Button>
@@ -280,10 +275,10 @@ export default function TripSelection() {
             value={vehicleType}
             onValueChange={(value) => {
               setVehicleType(value);
-              setSelectedCompany("all"); // Reset company selection when transport type changes
+              setSelectedCompany("all");
             }}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <Truck className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Transport type" />
             </SelectTrigger>
@@ -296,12 +291,12 @@ export default function TripSelection() {
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <Select
           value={sortBy}
           onValueChange={(value) => setSortBy(value as SortOption)}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
@@ -312,7 +307,7 @@ export default function TripSelection() {
         </Select>
 
         <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Filter by Company" />
           </SelectTrigger>
           <SelectContent className="max-h-[200px] overflow-y-auto">
@@ -330,61 +325,67 @@ export default function TripSelection() {
         <div className="p-4 text-red-500 bg-red-50 rounded-lg">{error}</div>
       )}
 
-      {isLoading && <div className="p-4 text-center">Loading trips...</div>}
-
-      {!isLoading && !error && trips.length === 0 && (
-        <div className="p-4 text-center text-gray-500">
-          No trips found for the selected criteria.
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <LoadingSpinner />
         </div>
-      )}
+      ) : (
+        <>
+          {!error && trips.length === 0 && (
+            <div className="p-4 text-center text-gray-500">
+              No trips found for the selected criteria.
+            </div>
+          )}
 
-      {!isLoading && !error && trips.length > 0 && (
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Time</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Route</TableHead>
-                <TableHead>Seats left</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {trips.map((trip) => (
-                <TableRow key={trip.id}>
-                  <TableCell>
-                    {format(
-                      parse(trip.departure_time, "HH:mm", new Date()),
-                      "hh:mm a"
-                    )}
-                  </TableCell>
-                  <TableCell>{trip.transport_company.name}</TableCell>
-                  <TableCell>{trip.route.name}</TableCell>
-                  <TableCell>
-                    {trip.vehicle ? trip.vehicle.capacity : "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    ₱{getPriceForDestination(trip, destination).toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      onClick={() =>
-                        router.push(
-                          `/seat-selection?tripId=${trip.id}&destination=${destination}`
-                        )
-                      }
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white"
-                    >
-                      Book Seats
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+          {!error && trips.length > 0 && (
+            <div className="border rounded-lg overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Route</TableHead>
+                    <TableHead>Seats left</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead className="text-right">Book</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {trips.map((trip) => (
+                    <TableRow key={trip.id}>
+                      <TableCell>
+                        {format(
+                          parse(trip.departure_time, "HH:mm", new Date()),
+                          "hh:mm a"
+                        )}
+                      </TableCell>
+                      <TableCell>{trip.transport_company.name}</TableCell>
+                      <TableCell>{trip.route.name}</TableCell>
+                      <TableCell>
+                        {trip.vehicle ? trip.vehicle.capacity : "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        ₱{getPriceForDestination(trip, destination).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          onClick={() =>
+                            router.push(
+                              `/seat-selection?tripId=${trip.id}&destination=${destination}`
+                            )
+                          }
+                          className="bg-blue-500 hover:bg-blue-600 text-white"
+                        >
+                          Book Seats
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

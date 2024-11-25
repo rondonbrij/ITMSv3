@@ -1,5 +1,8 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
 import { useRouter } from "next/navigation";
+import { AnimatedButton } from "@/components/ui/animated-button";
+import Image from "next/image";
 
 function HeroBanner() {
   const router = useRouter();
@@ -11,32 +14,43 @@ function HeroBanner() {
   };
 
   return (
-    <section className="relative min-h-screen w-full flex items-center justify-center">
-      <div className="absolute inset-0 bg-cover bg-center banner">
-        <div className="absolute inset-0 bg-gradient-to-t from-blue-600/50 to-yellow-500/50" />
+    <section className="relative min-h-[calc(100vh-5rem)] w-full flex items-center justify-center">
+      <div className="absolute inset-0 overflow-hidden">
+        <Image
+          src="/images/terminal.jpg"
+          alt="Terminal Background"
+          fill
+          className="object-cover blur-[2px]"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/60" />
       </div>
       <div className="container relative w-full flex flex-col items-center justify-center text-center text-white px-5">
-        <h1 className="text-4xl md:text-6xl font-bold mb-4">
-          Irawan Land Transportation Terminal
+        <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
+          <span className="block text-2xl md:text-3xl font-medium mb-2 text-blue-200">
+            Welcome to
+          </span>
+          Puerto Princesa
+          <span className="block mt-2 text-3xl md:text-5xl text-yellow-400">
+            Land Transportation Terminal
+          </span>
         </h1>
-        <p className="text-xl md:text-2xl mb-8">
-          Official Booking Website of Puerto Princesa City
+        <p className="text-lg md:text-xl mb-12 max-w-2xl text-gray-200">
+          Your gateway to seamless travel across Puerto Princesa City. Book your
+          tickets online and experience convenient, reliable transportation
+          services.
         </p>
-        <div className="flex justify-center space-x-4">
-          <Button
+        <div className="flex flex-col md:flex-row justify-center gap-6">
+          <AnimatedButton
+            direction="north"
+            label="Going North"
             onClick={() => handleDirectionClick("north")}
-            size="lg"
-            className="bg-blue-500 text-primary-foreground hover:bg-yellow-500"
-          >
-            Going North
-          </Button>
-          <Button
+          />
+          <AnimatedButton
+            direction="south"
+            label="Going South"
             onClick={() => handleDirectionClick("south")}
-            size="lg"
-            className="bg-blue-500 text-primary-foreground hover:bg-yellow-500"
-          >
-            Going South
-          </Button>
+          />
         </div>
       </div>
     </section>
