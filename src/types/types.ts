@@ -207,12 +207,24 @@ export interface MaintenanceSchedule {
 
 // Administrative types
 export interface Announcement {
-  id: number;
+  id: string;
   title: string;
+  description: string;
   content: string;
-  created_at: string;
-  is_public: boolean;
+  date: string;
+  images: string[];
+  slug: string;
 }
+
+export interface PaginatedAnnouncements {
+  data: Announcement[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+
 
 export interface AuditLog {
   id: number;
