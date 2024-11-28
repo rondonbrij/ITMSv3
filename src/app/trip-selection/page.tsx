@@ -37,6 +37,9 @@ import {
 import { getAvailableTrips, getDestinations, mockAPI } from "@/lib/mock-api";
 import { Trip, Destination, TransportCompany } from "@/types/types";
 import LoadingSpinner from "@/components/loading-spinner";
+import { useAcknowledgment } from "@/components/acknowledgment-modal-provider";
+import { PrivacyPolicyModal } from "@/components/privacy-policy-modal";
+import { TermsOfServiceModal } from "@/components/terms-of-service-modal";
 
 type SortOption = "earliest" | "latest" | "cheapest";
 
@@ -72,6 +75,7 @@ const getPriceForDestination = (trip: Trip, destination: string) => {
 export default function TripSelection() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setShowAcknowledgmentModal, hasAgreed } = useAcknowledgment();
 
   const [destination, setDestination] = useState<string>(
     searchParams.get("destination") || ""
@@ -89,6 +93,14 @@ export default function TripSelection() {
   const [companies, setCompanies] = useState<TransportCompany[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
+
+  useEffect(() => {
+    if (!hasAgreed) {
+      setShowAcknowledgmentModal(true);
+    }
+  }, [hasAgreed, setShowAcknowledgmentModal]);
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -121,79 +133,85 @@ export default function TripSelection() {
     return true;
   });
 
-  useEffect(() => {
-    const fetchTrips = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await getAvailableTrips();
-        let fetchedTrips = response.data;
+  const handleBookNow = (tripId: string) => {
+    if (hasAgreed) {
+      router.push(
+        `/seat-selection?tripId=${tripId}&destination=${destination}`
+      );
+    } else {
+      setShowAcknowledgmentModal(true);
+    }
+  };
 
-        if (vehicleType && vehicleType !== "ALL") {
-          fetchedTrips = fetchedTrips.filter(
-            (trip) =>
-              trip.vehicle &&
-              trip.vehicle.vehicle_type.toUpperCase() ===
-                vehicleType.toUpperCase()
-          );
-        }
+  const fetchTrips = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await getAvailableTrips();
+      let fetchedTrips = response.data;
 
-        if (destination) {
-          fetchedTrips = fetchedTrips.filter((trip) =>
-            tripIncludesDestination(trip, destination)
-          );
-        }
-
-        const now = new Date();
-        const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
-          .getMinutes()
-          .toString()
-          .padStart(2, "0")}`;
-
-        fetchedTrips = fetchedTrips.filter((trip) => {
-          if (format(date, "yyyy-MM-dd") === format(now, "yyyy-MM-dd")) {
-            return trip.departure_time > currentTime;
-          }
-          return true;
-        });
-
-        if (selectedCompany && selectedCompany !== "all") {
-          fetchedTrips = fetchedTrips.filter(
-            (trip) => trip.transport_company.name === selectedCompany
-          );
-        }
-
+      if (vehicleType && vehicleType !== "ALL") {
         fetchedTrips = fetchedTrips.filter(
-          (trip) => trip.vehicle && trip.vehicle.capacity > 0
+          (trip) =>
+            trip.vehicle &&
+            trip.vehicle.vehicle_type.toUpperCase() ===
+              vehicleType.toUpperCase()
         );
-
-        switch (sortBy) {
-          case "earliest":
-            fetchedTrips.sort((a, b) =>
-              a.departure_time.localeCompare(b.departure_time)
-            );
-            break;
-          case "latest":
-            fetchedTrips.sort((a, b) =>
-              b.departure_time.localeCompare(a.departure_time)
-            );
-            break;
-          case "cheapest":
-            fetchedTrips.sort((a, b) => a.price - b.price);
-            break;
-        }
-
-        setTrips(fetchedTrips);
-      } catch (error) {
-        setError("Failed to fetch trips. Please try again later.");
-        console.error("Failed to fetch trips:", error);
-      } finally {
-        setIsLoading(false);
       }
-    };
 
-    fetchTrips();
-  }, [destination, date, vehicleType, sortBy, selectedCompany]);
+      if (destination) {
+        fetchedTrips = fetchedTrips.filter((trip) =>
+          tripIncludesDestination(trip, destination)
+        );
+      }
+
+      const now = new Date();
+      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")}`;
+
+      fetchedTrips = fetchedTrips.filter((trip) => {
+        if (format(date, "yyyy-MM-dd") === format(now, "yyyy-MM-dd")) {
+          return trip.departure_time > currentTime;
+        }
+        return true;
+      });
+
+      if (selectedCompany && selectedCompany !== "all") {
+        fetchedTrips = fetchedTrips.filter(
+          (trip) => trip.transport_company.name === selectedCompany
+        );
+      }
+
+      fetchedTrips = fetchedTrips.filter(
+        (trip) => trip.vehicle && trip.vehicle.capacity > 0
+      );
+
+      switch (sortBy) {
+        case "earliest":
+          fetchedTrips.sort((a, b) =>
+            a.departure_time.localeCompare(b.departure_time)
+          );
+          break;
+        case "latest":
+          fetchedTrips.sort((a, b) =>
+            b.departure_time.localeCompare(a.departure_time)
+          );
+          break;
+        case "cheapest":
+          fetchedTrips.sort((a, b) => a.price - b.price);
+          break;
+      }
+
+      setTrips(fetchedTrips);
+    } catch (error) {
+      setError("Failed to fetch trips. Please try again later.");
+      console.error("Failed to fetch trips:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchDestinations = async () => {
@@ -208,8 +226,22 @@ export default function TripSelection() {
     fetchDestinations();
   }, []);
 
+  useEffect(() => {
+    fetchTrips();
+  }, [destination, date, vehicleType, sortBy, selectedCompany]);
+
   return (
     <div className="container mx-auto py-8 px-4 space-y-8 bg-white">
+      <PrivacyPolicyModal
+        isOpen={showPrivacyPolicy}
+        onClose={() => setShowPrivacyPolicy(false)}
+      />
+
+      <TermsOfServiceModal
+        isOpen={showTermsOfService}
+        onClose={() => setShowTermsOfService(false)}
+      />
+
       <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center justify-between">
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 flex-1 w-full">
           <Popover>
@@ -369,12 +401,8 @@ export default function TripSelection() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
-                          onClick={() =>
-                            router.push(
-                              `/seat-selection?tripId=${trip.id}&destination=${destination}`
-                            )
-                          }
-                          className="bg-blue-500 hover:bg-blue-600 text-white"
+                          onClick={() => handleBookNow(trip.id)}
+                          className="bg-blue-500 hover:bg-primary text-white"
                         >
                           Book Seats
                         </Button>

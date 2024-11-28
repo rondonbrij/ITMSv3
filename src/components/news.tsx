@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -74,15 +73,12 @@ const newsItems: NewsItem[] = [
 ];
 
 export default function News() {
-  const [displayCount, setDisplayCount] = useState(3);
-  const isShowingAll = displayCount === newsItems.length;
-
   return (
     <section className="py-12 px-4 md:px-6">
       <div className="container mx-auto max-w-7xl">
         <h2 className="text-3xl font-bold text-center mb-8">Latest News</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {newsItems.slice(0, displayCount).map((item) => (
+          {newsItems.slice(0, 3).map((item) => (
             <Card
               key={item.id}
               className="overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
@@ -108,10 +104,10 @@ export default function News() {
                 </div>
               </CardContent>
               <CardFooter className="p-4 pt-0">
-                <Link href={`/news/${item.slug}`} className="w-full">
+                <Link href={`/announcements/${item.slug}`} className="w-full">
                   <Button
                     variant="outline"
-                    className="w-full hover:bg-primary hover:text-primary-foreground"
+                    className="w-full border-primary bg- hover:bg-primary hover:text-primary-foreground"
                   >
                     Read more
                   </Button>
@@ -121,16 +117,15 @@ export default function News() {
           ))}
         </div>
         <div className="mt-8 text-center">
-          {!isShowingAll && (
+          <Link href="/announcements">
             <Button
-              onClick={() => setDisplayCount(newsItems.length)}
               variant="outline"
               size="lg"
-              className="hover:bg-primary hover:text-primary-foreground"
+              className=" bg-blue-500 text-white hover:bg-primary hover:text-primary-foreground"
             >
               See More
             </Button>
-          )}
+          </Link>
         </div>
       </div>
     </section>

@@ -1,9 +1,17 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Facebook, Instagram, Twitter, Send } from "lucide-react";
+import { PrivacyPolicyModal } from "./privacy-policy-modal";
+import { TermsOfServiceModal } from "./terms-of-service-modal";
 
 export default function Footer() {
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
+
   return (
     <footer className="border-t">
       <div className="container mx-auto max-w-7xl px-4 py-12 md:py-16">
@@ -107,22 +115,31 @@ export default function Footer() {
               © 2024 PPPLT Booking. All rights reserved.
             </p>
             <nav className="flex gap-6">
-              <Link
-                href="/privacy"
+              <button
+                onClick={() => setShowPrivacyPolicy(true)}
                 className="text-sm text-muted-foreground hover:text-primary"
               >
                 Privacy Policy
-              </Link>
-              <Link
-                href="/terms"
+              </button>
+              <button
+                onClick={() => setShowTermsOfService(true)}
                 className="text-sm text-muted-foreground hover:text-primary"
               >
                 Terms of Service
-              </Link>
+              </button>
             </nav>
           </div>
         </div>
       </div>
+
+      <PrivacyPolicyModal
+        isOpen={showPrivacyPolicy}
+        onClose={() => setShowPrivacyPolicy(false)}
+      />
+      <TermsOfServiceModal
+        isOpen={showTermsOfService}
+        onClose={() => setShowTermsOfService(false)}
+      />
     </footer>
   );
 }

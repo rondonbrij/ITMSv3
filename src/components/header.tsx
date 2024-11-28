@@ -4,7 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { AlignJustify } from "lucide-react";
 
 const Header = () => {
@@ -18,20 +23,28 @@ const Header = () => {
     { href: "/contact", label: "CONTACT US" },
   ];
 
-  const NavLinks = ({ className }: { className?: string }) => (
+  const NavLinks = ({
+    className,
+    onClick,
+  }: {
+    className?: string;
+    onClick?: () => void;
+  }) => (
     <>
       {navItems.map((item) => (
         <Link
           key={item.href}
           href={item.href}
-          className="font-bold text-sm tracking-wide transition-colors hover:text-blue-600"
-          onClick={() => setIsOpen(false)}
+          className={`font-bold text-sm tracking-wide transition-colors hover:text-blue-600 ${className}`}
+          onClick={onClick}
         >
           {item.label}
         </Link>
       ))}
     </>
   );
+
+  const toggleSheet = () => setIsOpen(!isOpen);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
@@ -63,13 +76,16 @@ const Header = () => {
 
         <div className="md:hidden">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger className="md:hidden p-0">
-              <AlignJustify className="h-6 w-6" />
-              <span className="sr-only">Toggle Menu</span>
+            <SheetTrigger asChild>
+              <button onClick={toggleSheet} className="p-2">
+                <AlignJustify className="h-8 w-8" />
+                <span className="sr-only">Toggle Menu</span>
+              </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <nav className="flex flex-col gap-4 pt-8">
-                <NavLinks />
+            <SheetContent side="right" className=" sm:w-[400px] w-[300px]">
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <nav className="flex flex-col items-center justify-center gap-8 h-full">
+                <NavLinks onClick={toggleSheet} />
               </nav>
             </SheetContent>
           </Sheet>
