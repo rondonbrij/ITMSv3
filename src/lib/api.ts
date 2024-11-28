@@ -48,7 +48,17 @@ export const checkAuth = async () => {
 };
 
 // Booking APIs
-export const createBooking = async (bookingData: any) => {
+export const createBooking = async (bookingData: {
+    trip: number;
+    passenger_name: string;
+    passenger_contact: string;
+    total_passengers: number;
+    passenger_info: {
+        name: string;
+        age: number;
+        gender: string;
+    }[];
+}) => {
     return api.post('/bookings/create/', bookingData);
 };
 
@@ -74,8 +84,13 @@ export const markNotificationsSeen = async () => {
 };
 
 // Trip APIs
-export const getAvailableTrips = async (params: any) => {
-    return api.get('/available-trips/', { params });
+export const getAvailableTrips = async (params: {
+    date?: string;
+    destination?: string;
+    vehicleType?: string;
+    transportCompany?: string;
+}) => {
+    return api.get('/trips/', { params });
 };
 
 export const getTripDetail = async (tripId: number) => {
@@ -211,4 +226,20 @@ export const nfcTap = async (driverId: number) => {
 // DTR (Daily Time Record) API
 export const getDriverDTR = async (driverId: number) => {
     return api.get(`/drivers/${driverId}/dtrs/`);
+};
+
+// Seat Selection APIs
+export const getTripDetails = async (tripId: number) => {
+    return api.get(`/trips/${tripId}/`);
+};
+
+export const getBookingsForTrip = async (tripId: number) => {
+    return api.get(`/bookings/`, { 
+        params: { trip_id: tripId } 
+    });
+};
+
+// Add this new function to fetch transport companies
+export const getTransportCompanies = async () => {
+    return api.get('/transport-companies/');
 };

@@ -2,34 +2,41 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { MenuIcon } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { AlignJustify } from "lucide-react";
 
-const Header: React.FC = () => {
+const Header = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [language, setLanguage] = useState<"en" | "fil">("en");
-
-  const toggleLanguage = () => {
-    setLanguage((prev) => (prev === "en" ? "fil" : "en"));
-  };
 
   const navItems = [
-    { href: "/", label: "Home" },
-    { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact us" },
+    { href: "/", label: "HOME" },
+    { href: "/services", label: "SERVICES" },
+    { href: "/announcements", label: "ANNOUNCEMENTS" },
+    { href: "/contact", label: "CONTACT US" },
   ];
 
-  const NavLinks = () => (
+  const NavLinks = ({
+    className,
+    onClick,
+  }: {
+    className?: string;
+    onClick?: () => void;
+  }) => (
     <>
       {navItems.map((item) => (
         <Link
           key={item.href}
           href={item.href}
-          className="text-black hover:text-blue-400 transition-colors"
-          onClick={() => setIsOpen(false)}
+          className={`font-bold text-sm tracking-wide transition-colors hover:text-blue-600 ${className}`}
+          onClick={onClick}
         >
           {item.label}
         </Link>
@@ -37,41 +44,48 @@ const Header: React.FC = () => {
     </>
   );
 
+  const toggleSheet = () => setIsOpen(!isOpen);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex mx-auto px-4 h-20 items-center justify-between">
-        <div
-          className="flex items-center space-x-2 cursor-pointer"
-          onClick={() => router.push("/")}
-        >
-          <div className="w-8 h-8 bg-yellow-400 rounded-lg" />
-          <span className="text-black font-bold text-xl">Irawan Terminal</span>
+    <header className="sticky top-0 z-50 w-full border-b bg-white">
+      <div className="container flex h-20 items-center justify-between mx-auto px-4">
+        <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center space-x-2">
+            <Image
+              src="/images/ppltlogo.svg"
+              alt="PPLT Logo"
+              width={48}
+              height={48}
+              className="rounded-lg"
+            />
+            <div className="flex flex-col leading-none">
+              <span className="hidden md:block text-sm font-medium text-gray-600">
+                Puerto Princesa
+              </span>
+              <span className="hidden md:block text-base font-bold">
+                Land Transportation Terminal
+              </span>
+              <span className="md:hidden text-lg font-bold">PPLTT</span>
+            </div>
+          </Link>
         </div>
-        <nav className="hidden md:flex gap-6">
+
+        <nav className="hidden md:flex md:gap-8 md:justify-end md:flex-1">
           <NavLinks />
         </nav>
-        <div className="flex items-center gap-4">
-          <Button onClick={toggleLanguage} variant="outline" size="sm">
-            {language === "en" ? "English" : "Filipino"}
-          </Button>
+
+        <div className="md:hidden">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="md:hidden">
-                <MenuIcon className="h-6 w-6" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
+              <button onClick={toggleSheet} className="p-2">
+                <AlignJustify className="h-8 w-8" />
+                <span className="sr-only">Toggle Menu</span>
+              </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <nav className="flex flex-col gap-4">
-                <NavLinks />
-                <Button
-                  onClick={toggleLanguage}
-                  variant="outline"
-                  size="sm"
-                  className="mt-auto"
-                >
-                  {language === "en" ? "English" : "Filipino"}
-                </Button>
+            <SheetContent side="right" className=" sm:w-[400px] w-[300px]">
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <nav className="flex flex-col items-center justify-center gap-8 h-full">
+                <NavLinks onClick={toggleSheet} />
               </nav>
             </SheetContent>
           </Sheet>

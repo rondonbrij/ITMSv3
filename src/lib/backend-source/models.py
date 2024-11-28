@@ -21,6 +21,8 @@ class TransportCompany(models.Model):
 
     def __str__(self):
         return self.name
+    
+    
 
 class Destination(models.Model):
     name = models.CharField(max_length=255)
@@ -50,6 +52,7 @@ class Vehicle(models.Model):
     violation_count = models.IntegerField(default=0)
     picture = models.ImageField(upload_to='vehicle_pictures/', null=True, blank=True)
     operator = models.CharField(max_length=100, default="Unknown Operator")
+    last_driver_operated = models.ForeignKey('Driver', on_delete=models.SET_NULL, related_name='last_operated_vehicles', null=True, blank=True)
 
     def __str__(self):
         return f"{self.vehicle_type} {self.model_name} ({self.year})"
@@ -67,9 +70,15 @@ class Feedback(models.Model):
     cellphone = models.CharField(max_length=20)
     feedback = models.TextField()
     submitted_at = models.DateTimeField(auto_now_add=True)
+    transport_company = models.ForeignKey(TransportCompany, on_delete=models.CASCADE, related_name='feedbacks', null=True, blank=True, editable=False)
 
     def __str__(self):
         return f"Feedback from {self.name} on {self.submitted_at}"
+
+    def save(self, *args, **kwargs):
+        if not self.transport_company and self.vehicle:
+            self.transport_company = self.vehicle.transport_company
+        super().save(*args, **kwargs)
 
 class Driver(models.Model):
     name = models.CharField(max_length=100)
@@ -182,14 +191,16 @@ class Notification(models.Model):
 class VehicleViolation(models.Model):  # Update class name
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name='violations', null=True, blank=True)
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='vehicle_violations', null=True, blank=True)  # Update related_name
-    violation_type = models.CharField(max_length=100)
+    violation_place = models.CharField(max_length=255)  # Ensure this field is defined
     description = models.TextField(blank=True, null=True)
     date = models.DateField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=[('unresolved', 'Unresolved'), ('resolved', 'Resolved')], default='unresolved')
-    reported_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    reported_by = models.CharField(max_length=255, null=True, blank=True)  # Change to CharField
+    transport_company = models.ForeignKey(TransportCompany, on_delete=models.CASCADE, related_name='vehicle_violations', null=True, blank=True)
+    violation_image = models.ImageField(upload_to='violation_slips/', null=True, blank=True)  # Add image field
 
     def __str__(self):
-        return f"Violation: {self.violation_type} - Status: {self.status}"
+        return f"Violation: {self.description} - Status: {self.status}"
 
 class Chat(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')

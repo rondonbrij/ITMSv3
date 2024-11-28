@@ -1,101 +1,145 @@
-import Link from "next/link";
+"use client";
 
-function Footer() {
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Facebook, Instagram, Twitter, Send } from "lucide-react";
+import { PrivacyPolicyModal } from "./privacy-policy-modal";
+import { TermsOfServiceModal } from "./terms-of-service-modal";
+
+export default function Footer() {
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
+
   return (
-    <footer className="border-t bg-muted">
-      <div className="container py-8 flex flex-col items-center">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full max-w-4xl">
-          <div>
-            <h3 className="font-semibold mb-4">About</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="#"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Company
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Team
-                </Link>
-              </li>
-            </ul>
+    <footer className="border-t">
+      <div className="container mx-auto max-w-7xl px-4 py-12 md:py-16">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">
+              Puerto Princesa Land Transportation Terminal
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Providing safe and reliable transportation services to connect
+              people and places across Puerto Princesa.
+            </p>
           </div>
+
           <div>
-            <h3 className="font-semibold mb-4">Services</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/trip-selection?vehicleType=BUS"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Bus Booking
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/trip-selection?vehicleType=VAN"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Van Booking
-                </Link>
-              </li>
-            </ul>
+            <h4 className="font-semibold mb-4">Quick Links</h4>
+            <nav className="space-y-2">
+              <Link
+                href="/about"
+                className="block text-sm text-muted-foreground hover:text-primary"
+              >
+                About Us
+              </Link>
+              <Link
+                href="/news"
+                className="block text-sm text-muted-foreground hover:text-primary"
+              >
+                News
+              </Link>
+              <Link
+                href="/careers"
+                className="block text-sm text-muted-foreground hover:text-primary"
+              >
+                Careers
+              </Link>
+            </nav>
           </div>
+
           <div>
-            <h3 className="font-semibold mb-4">Support</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="#"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Help Center
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Contact
-                </Link>
-              </li>
-            </ul>
+            <h4 className="font-semibold mb-4">Support</h4>
+            <nav className="space-y-2">
+              <Link
+                href="/contact"
+                className="block text-sm text-muted-foreground hover:text-primary"
+              >
+                Contact Us
+              </Link>
+              <Link
+                href="/faq"
+                className="block text-sm text-muted-foreground hover:text-primary"
+              >
+                FAQ
+              </Link>
+              <Link
+                href="/help"
+                className="block text-sm text-muted-foreground hover:text-primary"
+              >
+                Help Center
+              </Link>
+            </nav>
           </div>
-          <div>
-            <h3 className="font-semibold mb-4">Legal</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="#"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Terms of Service
-                </Link>
-              </li>
-            </ul>
+
+          <div className="space-y-4">
+            <h4 className="font-semibold">Stay Updated</h4>
+            <form className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                className="max-w-[240px]"
+              />
+              <Button type="submit" size="icon">
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+            <div className="flex gap-4">
+              <Link
+                href="#"
+                className="text-muted-foreground hover:text-primary"
+              >
+                <Facebook className="h-5 w-5" />
+              </Link>
+              <Link
+                href="#"
+                className="text-muted-foreground hover:text-primary"
+              >
+                <Instagram className="h-5 w-5" />
+              </Link>
+              <Link
+                href="#"
+                className="text-muted-foreground hover:text-primary"
+              >
+                <Twitter className="h-5 w-5" />
+              </Link>
+            </div>
           </div>
         </div>
-        <div className="mt-8 pt-8 text-center text-sm text-muted-foreground">
-          © 2024 Irawan Terminal. All rights reserved.
+
+        <div className="mt-12 pt-8 border-t">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              © 2024 PPPLT Booking. All rights reserved.
+            </p>
+            <nav className="flex gap-6">
+              <button
+                onClick={() => setShowPrivacyPolicy(true)}
+                className="text-sm text-muted-foreground hover:text-primary"
+              >
+                Privacy Policy
+              </button>
+              <button
+                onClick={() => setShowTermsOfService(true)}
+                className="text-sm text-muted-foreground hover:text-primary"
+              >
+                Terms of Service
+              </button>
+            </nav>
+          </div>
         </div>
       </div>
+
+      <PrivacyPolicyModal
+        isOpen={showPrivacyPolicy}
+        onClose={() => setShowPrivacyPolicy(false)}
+      />
+      <TermsOfServiceModal
+        isOpen={showTermsOfService}
+        onClose={() => setShowTermsOfService(false)}
+      />
     </footer>
   );
 }
-
-export default Footer;

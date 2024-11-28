@@ -6,6 +6,8 @@ from two_factor.views import (
 )
 from django.views.generic import TemplateView
 from .views import submit_feedback, view_feedback, submit_violation, booking_detail_view  # Ensure the view is imported
+from .views import AllTransportCompaniesDataView  # Add import
+from .views import get_driver_info_by_nfc
 
 # Create a router to auto-generate routes for Vehicle, Driver, and Trip
 router = DefaultRouter()
@@ -46,6 +48,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('check-auth/', views.check_auth, name='check_auth'),
     path('logout/', views.logout_view, name='logout'),
+    path('user-details/', views.user_details, name='user_details'),
 
     # Notification routes
     path('notifications/', views.get_notifications, name='get_notifications'),
@@ -64,17 +67,8 @@ urlpatterns = [
     path('api/bookings/recent/', views.recent_bookings, name='recent_bookings'),
 
     # LTT Admin
-    path('manage-companies/', views.TransportCompanyManagementView.as_view(), name='manage_companies'),
-    path('analytics/', views.AnalyticsView.as_view(), name='analytics'),
-    path('advanced-analytics/', views.AdvancedAnalyticsView.as_view(), name='advanced_analytics'),
-    path('reports/', views.ReportsView.as_view(), name='reports'),
-    path('admin-dashboard/', views.AdminDashboardView.as_view(), name='admin_dashboard'),
     path('notifications/send/', views.NotificationView.as_view(), name='send_notification'),
     path('announcements/', views.AnnouncementView.as_view(), name='post_announcement'),
-    path('audit-logs/', views.AuditLogListView.as_view(), name='audit_logs'),
-    path('report-summary/', views.ReportSummaryView.as_view(), name='report_summary'),
-    path('export-report/', views.ExportReportView.as_view(), name='export_report'),
-    path('export-report/status/<task_id>/', views.ExportStatusView.as_view(), name='export_status'),
 
     # Two-factor authentication specific paths
     path('account/login/', LoginView.as_view(), name='login'),
@@ -91,7 +85,7 @@ urlpatterns = [
     path('ws/chat/', views.ChatConsumer.as_asgi()),
 
     # CSRF Token
-    path('csrf/', views.get_csrf_token, name='csrf_token'),
+    path('csrf/', views.get_csrf_token, name='csrf'),
     path('driver-info/<str:nfc_code>/', views.get_driver_info, name='get_driver_info'),
     path('nfc/', TemplateView.as_view(template_name='NFC.html'), name='nfc'),
     path('nfc-tap/<int:driver_id>/', views.nfc_tap_view, name='nfc_tap'),
@@ -104,7 +98,21 @@ urlpatterns = [
 
     # Violation submission route
     path('api/submit-violation/', submit_violation, name='submit_violation'),
+    path('submit-vehicle-violation/', views.submit_vehicle_violation, name='submit_vehicle_violation'),
+    path('submit-violation/', views.submit_vehicle_violation, name='submit_violation'),
 
-    path('admin/analytics/', views.TerminalAnalyticsView.as_view(), name='terminal_analytics'),
     path('ws/admin-notifications/', views.AdminNotificationConsumer.as_asgi()),
+    path('admin/all-companies-data/', AllTransportCompaniesDataView.as_view(), name='all_companies_data'),
+
+    # New views
+    path('officer-actions/<int:vehicle_id>/', views.OfficerActionsView.as_view(), name='officer_actions'),
+    path('maintenance/<int:vehicle_id>/', views.maintenance_view, name='maintenance'),
+    path('violations/', views.violations_view, name='violations'),
+    path('payment/', views.payment_view, name='payment'),
+    path('arrival-checking/', views.arrival_checking_view, name='arrival_checking'),
+    path('submit-maintenance/', views.submit_maintenance, name='submit_maintenance'),
+    path('submit-violation/', views.submit_violation, name='submit_violation'),
+    path('vehicle-violations/', TemplateView.as_view(template_name='vehicle_violations.html'), name='vehicle_violations'),
+    path('driver-violations/', TemplateView.as_view(template_name='driver_violations.html'), name='driver_violations'),
+    path('api/get-driver-info/', get_driver_info_by_nfc, name='get_driver_info_by_nfc'),
 ] + router.urls

@@ -14,11 +14,8 @@ export function VanLayout({ seats, onSeatClick }: VanLayoutProps) {
     return (
       <div className="flex justify-start gap-2">
         {seatNumbers.map((num) => {
-          const seat = seats.find((s) => s.number === num) || {
-            id: `seat-${num}`,
-            number: num,
-            status: "available",
-          };
+          const seat = seats.find((s) => s.number === num);
+          if (!seat) return null; // Skip rendering if seat does not exist
           return (
             <Seat
               key={seat.id}
@@ -41,7 +38,7 @@ export function VanLayout({ seats, onSeatClick }: VanLayoutProps) {
   );
 
   return (
-    <div className="flex">
+    <div className="flex flex-col md:flex-row">
       <div className="flex-1 space-y-2">
         {/* Main seating area with Driver seat before seat 1 */}
         <div className="flex justify-start gap-2">
@@ -64,32 +61,34 @@ export function VanLayout({ seats, onSeatClick }: VanLayoutProps) {
       </div>
 
       {/* Legend section */}
-      <div className="ml-4 space-y-2">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-black" />
-          <span>Driver</span>
+      <div className="mt-4 md:ml-4">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-black" />
+            <span>Driver</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-white border border-gray-300" />
+            <span>Available</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-[#90EE90]" />
+            <span>Selected</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-[#87CEEB]" />
+            <span>PWD</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-yellow-300" />
+            <span>Processing</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-red-500" />
+            <span>Booked</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-white border border-gray-300" />
-          <span>Available</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-[#90EE90]" />
-          <span>Selected</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-[#87CEEB]" />
-          <span>PWD</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-yellow-300" />
-          <span>Processing</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-red-500" />
-          <span>Booked</span>
-        </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground">
           Note: Actual seat arrangement may vary depending on the vehicle.
         </p>
       </div>
