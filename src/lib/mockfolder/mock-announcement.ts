@@ -10,7 +10,7 @@ export const announcements: Announcement[] = [
 
     Duis in lectus id odio imperdiet malesuada. Praesent quis fermentum velit. Mauris vulputate, orci quis tincidunt imperdiet, lorem quam rutrum elit, in tempus tortor nunc malesuada risus.`,
     date: "2024-02-15",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "new-terminal-wing-opening",
   },
   {
@@ -33,8 +33,8 @@ export const announcements: Announcement[] = [
       "Important updates to our service schedule during the upcoming holiday season. Lorem ipsum dolor sit amet...",
     date: "2024-02-05",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "holiday-schedule-updates",
   },
@@ -44,7 +44,7 @@ export const announcements: Announcement[] = [
     description: "Enhanced safety measures being implemented across all terminals.",
     content: "We are implementing new safety protocols across all our terminals to ensure passenger well-being. Lorem ipsum dolor sit amet...",
     date: "2024-01-30",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "safety-protocols-implementation",
   },
   {
@@ -54,9 +54,9 @@ export const announcements: Announcement[] = [
     content: `We're excited to announce the addition of 50 new vehicles to our transportation fleet. This expansion will significantly improve our service capacity and reduce waiting times. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`,
     date: "2024-01-25",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "fleet-expansion-2024",
   },
@@ -75,7 +75,7 @@ export const announcements: Announcement[] = [
     description: "Upcoming maintenance works across various terminals.",
     content: "View our comprehensive maintenance schedule for 2024. Please plan your travels accordingly.",
     date: "2024-01-15",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "annual-maintenance-2024",
   },
   {
@@ -85,8 +85,8 @@ export const announcements: Announcement[] = [
     content: "We're launching several new customer service initiatives aimed at enhancing your travel experience.",
     date: "2024-01-10",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "customer-service-enhancement",
   },
@@ -97,8 +97,8 @@ export const announcements: Announcement[] = [
     content: `We're proud to announce our new environmental sustainability program. This initiative includes solar panel installations, waste reduction measures, and the introduction of electric vehicles in our ground operations. Together, we can make a difference for our planet.`,
     date: "2024-01-05",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "green-initiative-2024",
   },
@@ -108,7 +108,7 @@ export const announcements: Announcement[] = [
     description: "Enhanced connectivity throughout terminal buildings.",
     content: "We've upgraded our Wi-Fi infrastructure to provide faster and more reliable internet access across all terminal areas.",
     date: "2023-12-28",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "wifi-upgrade-announcement",
   },
   {
@@ -118,9 +118,9 @@ export const announcements: Announcement[] = [
     content: "Discover a world of flavors at our new food court, featuring local and international cuisine options to enhance your travel experience.",
     date: "2023-12-20",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "new-food-court-opening",
   },
@@ -139,7 +139,7 @@ export const announcements: Announcement[] = [
     description: "Extended operating hours during the festive season.",
     content: `To accommodate increased holiday travel, we're extending our operating hours and adding extra services. Check our holiday schedule for detailed information.`,
     date: "2023-12-10",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "holiday-services-2023",
   },
   {
@@ -149,8 +149,8 @@ export const announcements: Announcement[] = [
     content: "We're introducing new accessibility features and services to ensure comfortable travel for all passengers.",
     date: "2023-12-05",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "accessibility-improvements",
   },
@@ -160,7 +160,7 @@ export const announcements: Announcement[] = [
     description: "Exclusive lounge for premium passengers.",
     content: "We're opening a new lounge for our premium passengers, offering luxurious amenities and services.",
     date: "2023-12-01",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "new-lounge-opening",
   },
   {
@@ -179,8 +179,8 @@ export const announcements: Announcement[] = [
     content: "Enjoy the new art installation featuring works by local artists in Terminal 2.",
     date: "2023-11-20",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "new-art-installation",
   },
@@ -190,7 +190,7 @@ export const announcements: Announcement[] = [
     description: "Upgraded displays for real-time flight information.",
     content: "We've upgraded our flight information display system to provide real-time updates and improved visibility.",
     date: "2023-11-15",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "flight-info-display-update",
   },
   {
@@ -209,8 +209,8 @@ export const announcements: Announcement[] = [
     content: "Our terminal renovation project will bring modern amenities and improved facilities for a better passenger experience.",
     date: "2023-11-05",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "terminal-renovation-project",
   },
@@ -220,7 +220,7 @@ export const announcements: Announcement[] = [
     description: "Exciting new shopping options in Terminal 1.",
     content: "Discover a variety of new retail stores opening in Terminal 1, offering a range of products and services.",
     date: "2023-11-01",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "new-retail-stores-opening",
   },
   {
@@ -239,8 +239,8 @@ export const announcements: Announcement[] = [
     content: "Our new self-service check-in kiosks will streamline the check-in process and reduce wait times.",
     date: "2023-10-20",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "new-check-in-kiosks",
   },
@@ -250,7 +250,7 @@ export const announcements: Announcement[] = [
     description: "Partnership with a new international airline.",
     content: "We're excited to announce a new partnership with an international airline, offering more destinations and services.",
     date: "2023-10-15",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "new-airline-partnership",
   },
   {
@@ -269,8 +269,8 @@ export const announcements: Announcement[] = [
     content: "Our new terminal shuttle service provides convenient transportation between terminals for passengers.",
     date: "2023-10-05",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "new-terminal-shuttle-service",
   },
@@ -280,7 +280,7 @@ export const announcements: Announcement[] = [
     description: "Designated areas for pets in terminals.",
     content: "We're introducing new pet relief areas in our terminals to accommodate passengers traveling with pets.",
     date: "2023-10-01",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "new-pet-relief-areas",
   },
   {
@@ -299,8 +299,8 @@ export const announcements: Announcement[] = [
     content: "Our new children's play area provides a fun and safe environment for kids to enjoy while waiting for flights.",
     date: "2023-09-20",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "new-childrens-play-area",
   },
@@ -310,7 +310,7 @@ export const announcements: Announcement[] = [
     description: "Fitness center for passengers to stay active.",
     content: "Stay active while traveling with our new fitness center, equipped with modern exercise equipment.",
     date: "2023-09-15",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "new-fitness-center",
   },
   {
@@ -329,8 +329,8 @@ export const announcements: Announcement[] = [
     content: "Our new business center provides workstations, meeting rooms, and other amenities for business travelers.",
     date: "2023-09-05",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "/images/placeholder.png",
+      "/images/placeholder.png",
     ],
     slug: "new-business-center",
   },
@@ -340,7 +340,7 @@ export const announcements: Announcement[] = [
     description: "On-site medical clinic for passenger health needs.",
     content: "Our new on-site medical clinic provides healthcare services for passengers in need.",
     date: "2023-09-01",
-    images: ["/placeholder.svg?height=400&width=600"],
+    images: ["/images/placeholder.png"],
     slug: "new-medical-clinic",
   },
   {

@@ -2,13 +2,13 @@ import Image from "next/image";
 
 function About() {
   return (
-    <section className="py-12 bg-muted">
-      <div className="container">
+    <section className="py-12 bg-white">
+      <div className="container mx-auto">
         <h2 className="text-2xl font-bold text-center mb-8">Who we are</h2>
         <div className="grid md:grid-cols-2 gap-8 items-center">
           <div className="relative h-[400px]">
             <Image
-              src="/placeholder.svg"
+              src="/images/Transport-term.jpg"
               alt="About us"
               fill
               className="object-cover rounded-lg"

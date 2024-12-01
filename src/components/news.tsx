@@ -22,7 +22,7 @@ const newsItems: NewsItem[] = [
     description:
       "Experience enhanced comfort and convenience with our upcoming terminal expansion project.",
     date: "2024-02-15",
-    image: "/placeholder.svg",
+    image: "/images/placeholder.png",
     slug: "new-terminal-wing-opening",
   },
   {
@@ -31,7 +31,7 @@ const newsItems: NewsItem[] = [
     description:
       "We're modernizing our booking process with a new digital ticketing system.",
     date: "2024-02-10",
-    image: "/placeholder.svg",
+    image: "/images/placeholder.png",
     slug: "digital-ticketing-launch",
   },
   {
@@ -40,7 +40,7 @@ const newsItems: NewsItem[] = [
     description:
       "Important updates to our service schedule during the upcoming holiday season.",
     date: "2024-02-05",
-    image: "/placeholder.svg",
+    image: "/images/placeholder.png",
     slug: "holiday-schedule-updates",
   },
   {
@@ -49,7 +49,7 @@ const newsItems: NewsItem[] = [
     description:
       "Expanding our service with new routes to popular destinations.",
     date: "2024-02-01",
-    image: "/placeholder.svg",
+    image: "/images/placeholder.svg",
     slug: "new-routes-announcement",
   },
   {
@@ -58,7 +58,7 @@ const newsItems: NewsItem[] = [
     description:
       "Learn about our upgraded safety protocols for passenger well-being.",
     date: "2024-01-28",
-    image: "/placeholder.svg",
+    image: "/images/placeholder.svg",
     slug: "safety-measures-enhancement",
   },
   {
@@ -67,7 +67,7 @@ const newsItems: NewsItem[] = [
     description:
       "Join us in our latest community service programs and activities.",
     date: "2024-01-25",
-    image: "/placeholder.svg",
+    image: "/images/placeholder.svg",
     slug: "community-service-initiative",
   },
 ];
