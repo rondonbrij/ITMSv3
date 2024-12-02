@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format, parse } from "date-fns";
-import { CalendarIcon, MapPin, Truck } from "lucide-react";
+import {
+  CalendarIcon,
+  MapPin,
+  PhilippinePeso,
+  ClockArrowDown,
+  ClockArrowUp,
+  Bus,
+  Building2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -36,10 +44,12 @@ import {
 } from "@/components/ui/table";
 import { getAvailableTrips, getDestinations, mockAPI } from "@/lib/mock-api";
 import { Trip, Destination, TransportCompany } from "@/types/types";
-import LoadingSpinner from "@/components/loading-spinner";
 import { useAcknowledgment } from "@/components/acknowledgment-modal-provider";
 import { PrivacyPolicyModal } from "@/components/privacy-policy-modal";
 import { TermsOfServiceModal } from "@/components/terms-of-service-modal";
+import { TripCard } from "@/components/trip-selection/TripCard";
+import { TripSkeleton } from "@/components/trip-selection/TripSkeleton";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type SortOption = "earliest" | "latest" | "cheapest";
 
@@ -56,7 +66,7 @@ function tripIncludesDestination(trip: Trip, destinationName: string): boolean {
   return isEndpoint || isCheckpoint;
 }
 
-const getPriceForDestination = (trip: Trip, destination: string) => {
+function getPriceForDestination(trip: Trip, destination: string) {
   if (!destination) {
     return trip.price;
   }
@@ -70,12 +80,13 @@ const getPriceForDestination = (trip: Trip, destination: string) => {
     (cp) => cp.checkpointId === checkpoint.id
   );
   return checkpointPrice ? checkpointPrice.price : trip.price;
-};
+}
 
 export default function TripSelection() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setShowAcknowledgmentModal, hasAgreed } = useAcknowledgment();
+  const isMobile = useMediaQuery("(max-width: 640px)");
 
   const [destination, setDestination] = useState<string>(
     searchParams.get("destination") || ""
@@ -230,6 +241,26 @@ export default function TripSelection() {
     fetchTrips();
   }, [destination, date, vehicleType, sortBy, selectedCompany]);
 
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    // Only set up WebSocket on client-side
+    if (typeof window !== "undefined") {
+      const socket = new WebSocket("ws://your-websocket-server-url");
+
+      socket.onmessage = (event) => {
+        const updatedTrip = JSON.parse(event.data);
+        setTrips((prevTrips) =>
+          prevTrips.map((trip) =>
+            trip.id === updatedTrip.id ? { ...trip, ...updatedTrip } : trip
+          )
+        );
+      };
+
+      return () => {
+        socket.close();
+      };
+    }
+  }, []);
   return (
     <div className="container mx-auto py-8 px-4 space-y-8 bg-white">
       <PrivacyPolicyModal
@@ -242,94 +273,103 @@ export default function TripSelection() {
         onClose={() => setShowTermsOfService(false)}
       />
 
-      <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center justify-between">
-        <div className="flex flex-col sm:flex-row flex-wrap gap-4 flex-1 w-full">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full sm:w-[200px] justify-start"
-              >
-                <MapPin className="mr-2 h-4 w-4" />
-                {destination || "Select destination"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0">
-              <Command>
-                <CommandInput placeholder="Search destination..." />
-                <CommandList>
-                  <CommandEmpty>No destination found.</CommandEmpty>
-                  <CommandGroup>
-                    {destinations.map((dest) => (
-                      <CommandItem
-                        key={dest.id}
-                        value={dest.name}
-                        onSelect={(value) => {
-                          setDestination(value);
-                        }}
-                      >
-                        <MapPin className="mr-2 h-4 w-4" />
-                        <span>{dest.name}</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+      <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center justify-between flex-1 w-full">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full sm:w-[200px] justify-start"
+            >
+              <MapPin className="mr-2 h-4 w-4" />
+              {destination || "Select destination"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[200px] p-0">
+            <Command>
+              <CommandInput placeholder="Search destination..." />
+              <CommandList>
+                <CommandEmpty>No destination found.</CommandEmpty>
+                <CommandGroup>
+                  {destinations.map((dest) => (
+                    <CommandItem
+                      key={dest.id}
+                      value={dest.name}
+                      onSelect={(value) => {
+                        setDestination(value);
+                      }}
+                    >
+                      <MapPin className="mr-2 h-4 w-4" />
+                      <span>{dest.name}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full sm:w-[200px] justify-start"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(date, "PPP")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(newDate) => {
-                  if (newDate) {
-                    setDate(newDate);
-                  }
-                }}
-                disabled={(date) => date < new Date()}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full sm:w-[200px] justify-start"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {format(date, "PPP")}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={(newDate) => {
+                if (newDate) {
+                  setDate(newDate);
+                }
+              }}
+              disabled={(date) => date < new Date()}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
 
-          <Select
-            value={vehicleType}
-            onValueChange={(value) => {
-              setVehicleType(value);
-              setSelectedCompany("all");
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <Truck className="mr-2 h-4 w-4" />
+        <Select
+          value={vehicleType}
+          onValueChange={(value) => {
+            setVehicleType(value);
+            setSelectedCompany("all");
+          }}
+        >
+          <SelectTrigger className="start w-full pl-4 sm:w-[200px]">
+            <div className="flex items-center flex-row">
+              <Bus className="mr-4 h-4 w-4" />
               <SelectValue placeholder="Transport type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">All Types</SelectItem>
-              <SelectItem value="BUS">Bus</SelectItem>
-              <SelectItem value="VAN">Van</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All Types</SelectItem>
+            <SelectItem value="BUS">Bus</SelectItem>
+            <SelectItem value="VAN">Van</SelectItem>
+          </SelectContent>
+        </Select>
 
-      <div className="flex flex-col sm:flex-row gap-4">
         <Select
           value={sortBy}
           onValueChange={(value) => setSortBy(value as SortOption)}
         >
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Sort by" />
+          <SelectTrigger className="start w-full pl-4 sm:w-[200px]">
+            <div className="flex items-center flex-row">
+              {sortBy === "earliest" && (
+                <ClockArrowUp className="mr-4 h-4 w-4" />
+              )}
+              {sortBy === "latest" && (
+                <ClockArrowDown className="mr-4 h-4 w-4" />
+              )}
+              {sortBy === "cheapest" && (
+                <PhilippinePeso className="mr-4 h-4 w-4" />
+              )}
+              <SelectValue placeholder="Sort by" />
+            </div>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="earliest">Earliest to Latest</SelectItem>
@@ -339,8 +379,11 @@ export default function TripSelection() {
         </Select>
 
         <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Filter by Company" />
+          <SelectTrigger className="start w-full pl-4 sm:w-[200px]">
+            <div className="flex items-center flex-row">
+              <Building2 className="mr-4 h-4 w-4" />
+              <SelectValue placeholder="Filter by Company" />
+            </div>
           </SelectTrigger>
           <SelectContent className="max-h-[200px] overflow-y-auto">
             <SelectItem value="all">All Companies</SelectItem>
@@ -358,8 +401,10 @@ export default function TripSelection() {
       )}
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <LoadingSpinner />
+        <div className="flex flex-col gap-4">
+          {[...Array(5)].map((_, index) => (
+            <TripSkeleton key={index} isMobile={isMobile} />
+          ))}
         </div>
       ) : (
         <>
@@ -370,48 +415,61 @@ export default function TripSelection() {
           )}
 
           {!error && trips.length > 0 && (
-            <div className="border rounded-lg overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Route</TableHead>
-                    <TableHead>Seats left</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead className="text-right">Book</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {trips.map((trip) => (
-                    <TableRow key={trip.id}>
-                      <TableCell>
-                        {format(
-                          parse(trip.departure_time, "HH:mm", new Date()),
-                          "hh:mm a"
-                        )}
-                      </TableCell>
-                      <TableCell>{trip.transport_company.name}</TableCell>
-                      <TableCell>{trip.route.name}</TableCell>
-                      <TableCell>
-                        {trip.vehicle ? trip.vehicle.capacity : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        ₱{getPriceForDestination(trip, destination).toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          onClick={() => handleBookNow(trip.id)}
-                          className="bg-blue-500 hover:bg-primary text-white"
-                        >
-                          Book Seats
-                        </Button>
-                      </TableCell>
+            <>
+              <div className="sm:hidden space-y-4">
+                {trips.map((trip) => (
+                  <TripCard
+                    key={trip.id}
+                    trip={trip}
+                    destination={destination}
+                    onBookNow={handleBookNow}
+                  />
+                ))}
+              </div>
+              <div className="hidden sm:block border rounded-lg overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Company</TableHead>
+                      <TableHead>Route</TableHead>
+                      <TableHead>Seats left</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead className="text-right">Book</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {trips.map((trip) => (
+                      <TableRow key={trip.id}>
+                        <TableCell>
+                          {format(
+                            parse(trip.departure_time, "HH:mm", new Date()),
+                            "hh:mm a"
+                          )}
+                        </TableCell>
+                        <TableCell>{trip.transport_company.name}</TableCell>
+                        <TableCell>{trip.route.name}</TableCell>
+                        <TableCell>
+                          {trip.vehicle ? trip.vehicle.capacity : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          ₱
+                          {getPriceForDestination(trip, destination).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            onClick={() => handleBookNow(trip.id)}
+                            className="bg-blue-500 hover:bg-primary text-white"
+                          >
+                            Book Seats
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </>
       )}
