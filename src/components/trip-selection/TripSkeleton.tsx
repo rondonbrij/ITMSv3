@@ -17,25 +17,27 @@ export function TripSkeleton({ isMobile }: { isMobile: boolean }) {
   }
 
   return (
-    <tr className="animate-pulse">
-      <td className="p-2">
-        <div className="h-6 bg-gray-200 rounded"></div>
-      </td>
-      <td className="p-2">
-        <div className="h-6 bg-gray-200 rounded"></div>
-      </td>
-      <td className="p-2">
-        <div className="h-6 bg-gray-200 rounded"></div>
-      </td>
-      <td className="p-2">
-        <div className="h-6 bg-gray-200 rounded"></div>
-      </td>
-      <td className="p-2">
-        <div className="h-6 bg-gray-200 rounded"></div>
-      </td>
-      <td className="p-2">
-        <div className="h-10 bg-gray-200 rounded w-24 ml-auto"></div>
-      </td>
-    </tr>
+    <div className="animate-pulse">
+      <div className="flex">
+        <div className="p-2 flex-1">
+          <div className="h-6 bg-gray-200 rounded"></div>
+        </div>
+        <div className="p-2 flex-1">
+          <div className="h-6 bg-gray-200 rounded"></div>
+        </div>
+        <div className="p-2 flex-1">
+          <div className="h-6 bg-gray-200 rounded"></div>
+        </div>
+        <div className="p-2 flex-1">
+          <div className="h-6 bg-gray-200 rounded"></div>
+        </div>
+        <div className="p-2 flex-1">
+          <div className="h-6 bg-gray-200 rounded"></div>
+        </div>
+        <div className="p-2 flex-1">
+          <div className="h-10 bg-gray-200 rounded w-24 ml-auto"></div>
+        </div>
+      </div>
+    </div>
   );
 }

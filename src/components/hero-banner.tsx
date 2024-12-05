@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Search } from "lucide-react";
@@ -16,43 +16,42 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
-// Destinations in Palawan
-const destinations = [
-  "El Nido",
-  "Port Barton",
-  "Sabang",
-  "San Vicente",
-  "Taytay",
-  "Roxas",
-  "Brooke's Point",
-  "Narra",
-  "Quezon",
-  "Aborlan",
-];
+import { routeAPI } from "@/lib/api";
+import { Route } from "@/types/types";
 
 function HeroBanner() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [routes, setRoutes] = useState<Route[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleDestinationSelect = (destination: string) => {
-    setInputValue(destination);
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      try {
+        const fetchedRoutes = await routeAPI.list();
+        setRoutes(fetchedRoutes);
+      } catch (error) {
+        console.error("Failed to fetch routes:", error);
+      }
+    };
+    fetchRoutes();
+  }, []);
+
+  const handleRouteSelect = (route: Route) => {
+    setInputValue(route.name);
     setOpen(false);
     const today = new Date();
     const formattedDate = today.toISOString().split("T")[0];
-    router.push(
-      `/trip-selection?destination=${destination}&date=${formattedDate}`
-    );
+    router.push(`/trip-selection?routeId=${route.id}&date=${formattedDate}`);
   };
 
-  const filteredDestinations = inputValue
-    ? destinations.filter((dest) =>
-        dest.toLowerCase().includes(inputValue.toLowerCase())
+  const filteredRoutes = inputValue
+    ? routes.filter((route) =>
+        route.name.toLowerCase().includes(inputValue.toLowerCase())
       )
-    : destinations;
+    : routes;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -93,9 +92,8 @@ function HeroBanner() {
           </span>
         </h1>
         <p className="text-lg md:text-xl mb-12 max-w-2xl text-gray-200">
-          Your gateway to seamless travel across Puerto Princesa City. Book your
-          tickets online and experience convenient, reliable transportation
-          services.
+          Your gateway to seamless travel across Palawan. Book your tickets
+          online and experience convenient, reliable transportation services.
         </p>
         <div className="w-full max-w-sm">
           <Popover open={open} onOpenChange={handlePopoverOpenChange}>
@@ -104,7 +102,7 @@ function HeroBanner() {
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Where do you want to go?"
+                  placeholder="Select a route"
                   className="w-full pl-4 pr-10 py-2 text-left bg-white text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={inputValue}
                   onChange={handleInputChange}
@@ -120,15 +118,15 @@ function HeroBanner() {
             >
               <Command>
                 <CommandList>
-                  <CommandEmpty>No destination found.</CommandEmpty>
+                  <CommandEmpty>No routes found.</CommandEmpty>
                   <CommandGroup className="max-h-60 overflow-y-auto">
-                    {filteredDestinations.map((destination) => (
+                    {filteredRoutes.map((route) => (
                       <CommandItem
-                        key={destination}
-                        value={destination}
-                        onSelect={handleDestinationSelect}
+                        key={route.id}
+                        value={route.name}
+                        onSelect={() => handleRouteSelect(route)}
                       >
-                        {destination}
+                        {route.name}
                       </CommandItem>
                     ))}
                   </CommandGroup>
