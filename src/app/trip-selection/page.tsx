@@ -291,21 +291,7 @@ export default function TripSelection() {
       }
     };
     fetchCheckpoints();
-  }, [searchParams, checkpoint]);
-
-  // Move companies state update to useEffect to avoid setState during render
-  useEffect(() => {
-    if (trips.length > 0) {
-      const uniqueCompanies = Array.from(
-        new Set(trips.map((trip) => trip.transport_company.name))
-      );
-      const formattedCompanies = uniqueCompanies.map((name) => ({
-        id: name,
-        name: name,
-      }));
-      setCompanies(formattedCompanies);
-    }
-  }, [trips]);
+  }, [searchParams]);
 
   // WebSocket connection for real-time updates
   useEffect(() => {
@@ -344,6 +330,10 @@ export default function TripSelection() {
 
     fetchInitialCheckpoint();
   }, [searchParams]);
+
+  useEffect(() => {
+    fetchTrips();
+  }, [checkpoint, date, vehicleType, sortBy, selectedCompany]);
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8 bg-white">
