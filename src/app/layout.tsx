@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "@/styles/globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { AcknowledgmentModalProvider } from "@/components/acknowledgment-modal-provider";
@@ -16,12 +15,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
           <AcknowledgmentModalProvider>
             <div className="relative flex min-h-screen flex-col">
               <Header />
@@ -29,7 +22,6 @@ export default function RootLayout({
               <Footer />
             </div>
           </AcknowledgmentModalProvider>
-        </ThemeProvider>
       </body>
     </html>
   );
