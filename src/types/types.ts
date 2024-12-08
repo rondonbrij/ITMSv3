@@ -78,16 +78,22 @@ export interface Checkpoint {
   baranggay: string;
 }
 
+export interface CheckpointPrice {
+  checkpointId: number;
+  price: number;
+}
+
 export interface Trip {
-  id: number;
+  id: string;
   destination: number;
-  vehicle?: number;
-  driver?: number;
+  vehicle?: Vehicle;
+  driver?: Driver;
   departure_time: string;
   price: number;
-  route?: number;
-  checkpoints: number[];
-  transport_company: number;
+  route: Route;
+  checkpoints: Checkpoint[];
+  checkpointPrices?: CheckpointPrice[];
+  transport_company: TransportCompany;
   status: 'scheduled' | 'departed' | 'arrived';
   notes?: string;
   seat_number?: string;

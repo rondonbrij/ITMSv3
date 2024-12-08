@@ -16,42 +16,44 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { routeAPI } from "@/lib/api";
-import { Route } from "@/types/types";
+import { checkpointAPI } from "@/lib/api";
+import { Checkpoint } from "@/types/types";
 
 function HeroBanner() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const [routes, setRoutes] = useState<Route[]>([]);
+  const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchRoutes = async () => {
+    const fetchCheckpoints = async () => {
       try {
-        const fetchedRoutes = await routeAPI.list();
-        setRoutes(fetchedRoutes);
+        const fetchedCheckpoints = await checkpointAPI.list();
+        setCheckpoints(fetchedCheckpoints);
       } catch (error) {
-        console.error("Failed to fetch routes:", error);
+        console.error("Failed to fetch checkpoints:", error);
       }
     };
-    fetchRoutes();
+    fetchCheckpoints();
   }, []);
 
-  const handleRouteSelect = (route: Route) => {
-    setInputValue(route.name);
+  const handleCheckpointSelect = (checkpoint: Checkpoint) => {
+    setInputValue(checkpoint.baranggay);
     setOpen(false);
     const today = new Date();
     const formattedDate = today.toISOString().split("T")[0];
-    router.push(`/trip-selection?routeId=${route.id}&date=${formattedDate}`);
+    router.push(
+      `/trip-selection?checkpointId=${checkpoint.id}&date=${formattedDate}`
+    );
   };
 
-  const filteredRoutes = inputValue
-    ? routes.filter((route) =>
-        route.name.toLowerCase().includes(inputValue.toLowerCase())
+  const filteredCheckpoints = inputValue
+    ? checkpoints.filter((checkpoint) =>
+        checkpoint.baranggay.toLowerCase().includes(inputValue.toLowerCase())
       )
-    : routes;
+    : checkpoints;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -102,7 +104,7 @@ function HeroBanner() {
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Select a route"
+                  placeholder="Select a checkpoint"
                   className="w-full pl-4 pr-10 py-2 text-left bg-white text-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={inputValue}
                   onChange={handleInputChange}
@@ -118,15 +120,15 @@ function HeroBanner() {
             >
               <Command>
                 <CommandList>
-                  <CommandEmpty>No routes found.</CommandEmpty>
+                  <CommandEmpty>No checkpoints found.</CommandEmpty>
                   <CommandGroup className="max-h-60 overflow-y-auto">
-                    {filteredRoutes.map((route) => (
+                    {filteredCheckpoints.map((checkpoint) => (
                       <CommandItem
-                        key={route.id}
-                        value={route.name}
-                        onSelect={() => handleRouteSelect(route)}
+                        key={checkpoint.id}
+                        value={checkpoint.baranggay}
+                        onSelect={() => handleCheckpointSelect(checkpoint)}
                       >
-                        {route.name}
+                        {checkpoint.baranggay}
                       </CommandItem>
                     ))}
                   </CommandGroup>

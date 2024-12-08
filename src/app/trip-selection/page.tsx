@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { format, parse } from "date-fns";
+import { format, parse, isValid } from "date-fns";
 import {
   CalendarIcon,
   MapPin,
-  PhilippinePeso,
-  ClockArrowDown,
-  ClockArrowUp,
+  PoundSterlingIcon as PhilippinePeso,
+  ClockIcon as ClockArrowDown,
+  ArrowUpIcon as ClockArrowUp,
   Bus,
   Building2,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -42,8 +43,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getAvailableTrips, getDestinations, mockAPI } from "@/lib/mock-api";
-import { Trip, Destination, TransportCompany } from "@/types/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { tripAPI, checkpointAPI, transportCompanyAPI } from "@/lib/api";
+import { Trip, Checkpoint, TransportCompany } from "@/types/types";
 import { useAcknowledgment } from "@/components/acknowledgment-modal-provider";
 import { PrivacyPolicyModal } from "@/components/privacy-policy-modal";
 import { TermsOfServiceModal } from "@/components/terms-of-service-modal";
@@ -53,34 +62,31 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type SortOption = "earliest" | "latest" | "cheapest";
 
-function tripIncludesDestination(trip: Trip, destinationName: string): boolean {
-  if (!destinationName) return true;
-  const isEndpoint =
-    trip.route.checkpoints[
-      trip.route.checkpoints.length - 1
-    ].name.toLowerCase() === destinationName.toLowerCase();
-  const isCheckpoint = trip.route.checkpoints.some(
-    (checkpoint) =>
-      checkpoint.name.toLowerCase() === destinationName.toLowerCase()
-  );
-  return isEndpoint || isCheckpoint;
+function tripIncludesCheckpoint(trip: Trip, checkpointId: number): boolean {
+  return trip.checkpoints.some((checkpoint) => checkpoint.id === checkpointId);
 }
 
-function getPriceForDestination(trip: Trip, destination: string) {
-  if (!destination) {
-    return trip.price;
-  }
-  const checkpoint = trip.route.checkpoints.find(
-    (cp) => cp.name.toLowerCase() === destination.toLowerCase()
+// Update getPriceForCheckpoint function to handle undefined checkpointPrices
+function getPriceForCheckpoint(trip: Trip, checkpointId: number) {
+  const checkpointPrice = trip.checkpointPrices?.find(
+    (cp) => cp.checkpointId === checkpointId
   );
-  if (!checkpoint) {
-    return trip.price;
-  }
-  const checkpointPrice = trip.checkpointPrices.find(
-    (cp) => cp.checkpointId === checkpoint.id
-  );
-  return checkpointPrice ? checkpointPrice.price : trip.price;
+  // Convert price to number before returning
+  return checkpointPrice ? Number(checkpointPrice.price) : Number(trip.price);
 }
+
+const formatDepartureTime = (time: string) => {
+  try {
+    // Assuming time comes in "HH:mm" format from backend
+    const parsedTime = parse(time, "HH:mm", new Date());
+    if (isValid(parsedTime)) {
+      return format(parsedTime, "hh:mm a");
+    }
+    return "Invalid Time";
+  } catch {
+    return "Invalid Time";
+  }
+};
 
 export default function TripSelection() {
   const router = useRouter();
@@ -88,9 +94,7 @@ export default function TripSelection() {
   const { setShowAcknowledgmentModal, hasAgreed } = useAcknowledgment();
   const isMobile = useMediaQuery("(max-width: 640px)");
 
-  const [destination, setDestination] = useState<string>(
-    searchParams.get("destination") || ""
-  );
+  const [checkpoint, setCheckpoint] = useState<Checkpoint | null>(null);
   const [date, setDate] = useState<Date>(
     searchParams.get("date") ? new Date(searchParams.get("date")!) : new Date()
   );
@@ -100,7 +104,7 @@ export default function TripSelection() {
   const [sortBy, setSortBy] = useState<SortOption>("earliest");
   const [selectedCompany, setSelectedCompany] = useState<string>("all");
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [companies, setCompanies] = useState<TransportCompany[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -116,8 +120,8 @@ export default function TripSelection() {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await mockAPI.getTransportCompanies();
-        setCompanies(response.data);
+        const response = await transportCompanyAPI.list();
+        setCompanies(response);
       } catch (error) {
         console.error("Failed to fetch transport companies:", error);
         setError(
@@ -147,7 +151,7 @@ export default function TripSelection() {
   const handleBookNow = (tripId: string) => {
     if (hasAgreed) {
       router.push(
-        `/seat-selection?tripId=${tripId}&destination=${destination}`
+        `/seat-selection?tripId=${tripId}&checkpointId=${checkpoint?.id}`
       );
     } else {
       setShowAcknowledgmentModal(true);
@@ -158,8 +162,8 @@ export default function TripSelection() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await getAvailableTrips();
-      let fetchedTrips = response.data;
+      const response = await tripAPI.list();
+      let fetchedTrips = response;
 
       if (vehicleType && vehicleType !== "ALL") {
         fetchedTrips = fetchedTrips.filter(
@@ -170,9 +174,15 @@ export default function TripSelection() {
         );
       }
 
-      if (destination) {
+      if (checkpoint) {
         fetchedTrips = fetchedTrips.filter((trip) =>
-          tripIncludesDestination(trip, destination)
+          tripIncludesCheckpoint(trip, checkpoint.id)
+        );
+      }
+
+      if (selectedCompany && selectedCompany !== "all") {
+        fetchedTrips = fetchedTrips.filter(
+          (trip) => trip.transport_company.name === selectedCompany
         );
       }
 
@@ -188,12 +198,6 @@ export default function TripSelection() {
         }
         return true;
       });
-
-      if (selectedCompany && selectedCompany !== "all") {
-        fetchedTrips = fetchedTrips.filter(
-          (trip) => trip.transport_company.name === selectedCompany
-        );
-      }
 
       fetchedTrips = fetchedTrips.filter(
         (trip) => trip.vehicle && trip.vehicle.capacity > 0
@@ -211,7 +215,15 @@ export default function TripSelection() {
           );
           break;
         case "cheapest":
-          fetchedTrips.sort((a, b) => a.price - b.price);
+          fetchedTrips.sort((a, b) => {
+            const priceA = checkpoint
+              ? getPriceForCheckpoint(a, checkpoint.id)
+              : a.price;
+            const priceB = checkpoint
+              ? getPriceForCheckpoint(b, checkpoint.id)
+              : b.price;
+            return priceA - priceB;
+          });
           break;
       }
 
@@ -225,21 +237,35 @@ export default function TripSelection() {
   };
 
   useEffect(() => {
-    const fetchDestinations = async () => {
+    const fetchCheckpoints = async () => {
       try {
-        const response = await getDestinations();
-        setDestinations(response.data);
+        const response = await checkpointAPI.list();
+        setCheckpoints(response);
       } catch (error) {
-        setError("Failed to fetch destinations. Please try again later.");
-        console.error("Failed to fetch destinations:", error);
+        setError("Failed to fetch checkpoints. Please try again later.");
+        console.error("Failed to fetch checkpoints:", error);
       }
     };
-    fetchDestinations();
+    fetchCheckpoints();
   }, []);
 
   useEffect(() => {
     fetchTrips();
-  }, [destination, date, vehicleType, sortBy, selectedCompany]);
+  }, [checkpoint, date, vehicleType, sortBy, selectedCompany]);
+
+  // Move companies state update to useEffect to avoid setState during render
+  useEffect(() => {
+    if (trips.length > 0) {
+      const uniqueCompanies = Array.from(
+        new Set(trips.map((trip) => trip.transport_company.name))
+      );
+      const formattedCompanies = uniqueCompanies.map((name) => ({
+        id: name,
+        name: name,
+      }));
+      setCompanies(formattedCompanies);
+    }
+  }, [trips]);
 
   // WebSocket connection for real-time updates
   useEffect(() => {
@@ -261,6 +287,7 @@ export default function TripSelection() {
       };
     }
   }, []);
+
   return (
     <div className="container mx-auto py-8 px-4 space-y-8 bg-white">
       <PrivacyPolicyModal
@@ -281,25 +308,23 @@ export default function TripSelection() {
               className="w-full sm:w-[200px] justify-start"
             >
               <MapPin className="mr-2 h-4 w-4" />
-              {destination || "Select destination"}
+              {checkpoint ? checkpoint.baranggay : "Select checkpoint"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[200px] p-0">
             <Command>
-              <CommandInput placeholder="Search destination..." />
+              <CommandInput placeholder="Search checkpoint..." />
               <CommandList>
-                <CommandEmpty>No destination found.</CommandEmpty>
+                <CommandEmpty>No checkpoint found.</CommandEmpty>
                 <CommandGroup>
-                  {destinations.map((dest) => (
+                  {checkpoints.map((cp) => (
                     <CommandItem
-                      key={dest.id}
-                      value={dest.name}
-                      onSelect={(value) => {
-                        setDestination(value);
-                      }}
+                      key={cp.id}
+                      value={cp.baranggay}
+                      onSelect={() => setCheckpoint(cp)}
                     >
                       <MapPin className="mr-2 h-4 w-4" />
-                      <span>{dest.name}</span>
+                      <span>{cp.baranggay}</span>
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -386,9 +411,11 @@ export default function TripSelection() {
             </div>
           </SelectTrigger>
           <SelectContent className="max-h-[200px] overflow-y-auto">
-            <SelectItem value="all">All Companies</SelectItem>
+            <SelectItem key="all" value="all">
+              All Companies
+            </SelectItem>
             {filteredCompanies.map((company) => (
-              <SelectItem key={company.id} value={company.name}>
+              <SelectItem key={`company-${company.id}`} value={company.name}>
                 {company.name}
               </SelectItem>
             ))}
@@ -421,7 +448,7 @@ export default function TripSelection() {
                   <TripCard
                     key={trip.id}
                     trip={trip}
-                    destination={destination}
+                    checkpoint={checkpoint}
                     onBookNow={handleBookNow}
                   />
                 ))}
@@ -435,6 +462,7 @@ export default function TripSelection() {
                       <TableHead>Route</TableHead>
                       <TableHead>Seats left</TableHead>
                       <TableHead>Price</TableHead>
+                      <TableHead>Notes</TableHead>
                       <TableHead className="text-right">Book</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -442,10 +470,9 @@ export default function TripSelection() {
                     {trips.map((trip) => (
                       <TableRow key={trip.id}>
                         <TableCell>
-                          {format(
-                            parse(trip.departure_time, "HH:mm", new Date()),
-                            "hh:mm a"
-                          )}
+                          {trip.departure_time
+                            ? formatDepartureTime(trip.departure_time)
+                            : "No Time"}
                         </TableCell>
                         <TableCell>{trip.transport_company.name}</TableCell>
                         <TableCell>{trip.route.name}</TableCell>
@@ -454,7 +481,30 @@ export default function TripSelection() {
                         </TableCell>
                         <TableCell>
                           ₱
-                          {getPriceForDestination(trip, destination).toFixed(2)}
+                          {checkpoint
+                            ? Number(
+                                getPriceForCheckpoint(trip, checkpoint.id)
+                              ).toFixed(2)
+                            : Number(trip.price).toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Trip Notes</DialogTitle>
+                                <DialogDescription>
+                                  {trip.notes ||
+                                    "No notes available for this trip."}
+                                </DialogDescription>
+                              </DialogHeader>
+                            </DialogContent>
+                          </Dialog>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button

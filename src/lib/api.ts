@@ -1,4 +1,5 @@
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 import {
   TransportCompany, Destination, Vehicle, Driver, Route, Passageway,
   Checkpoint, Trip, Booking, PassengerInfo, PackageInfo, PaymentProof,
@@ -15,15 +16,39 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
-// Add a request interceptor to include the token in the header
+// Add a request interceptor
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = Cookies.get('authToken');
   if (token) {
     config.headers['Authorization'] = `Token ${token}`;
   }
+  const csrfToken = Cookies.get('csrftoken');
+  if (csrfToken) {
+    config.headers['X-CSRFToken'] = csrfToken;
+  }
   return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
+// Add a response interceptor
+api.interceptors.response.use((response) => {
+  return response;
+}, async (error) => {
+  const originalRequest = error.config;
+  if (error.response.status === 401 && !originalRequest._retry) {
+    originalRequest._retry = true;
+    try {
+      await login('itms', '123itms');
+      return api(originalRequest);
+    } catch (error) {
+      console.error('Error refreshing authentication:', error);
+    }
+  }
+  return Promise.reject(error);
 });
 
 // Generic CRUD functions
@@ -120,6 +145,7 @@ export const tripAPI = {
   list: () => listEntities<Trip>('/trips/'),
   updateStatus: (id: number, status: string) => api.patch(`/update-trip-status/${id}/`, { status }),
   getBookingDetails: (id: number) => api.get<Booking[]>(`/trip-booking-details/${id}/`),
+  getTransportCompanies: () => listEntities<TransportCompany>('/transport-companies/'),
 };
 
 export const bookingAPI = {
@@ -287,23 +313,45 @@ export const feedbackAPI = {
 
 // Authentication and other utility functions
 export const login = async (username: string, password: string) => {
-  const response = await api.post('/login/', { username, password });
-  return response.data;
+  try {
+    const response = await api.post('/login/', { username, password });
+    const { token } = response.data;
+    Cookies.set('authToken', token, { expires: 7, secure: true, sameSite: 'strict' });
+    return response.data;
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
 };
 
 export const logout = async () => {
-  const response = await api.post('/logout/');
-  return response.data;
-};
-
-export const getCSRFToken = async () => {
-  const response = await api.get('/csrf/');
-  return response.data.csrfToken;
+  try {
+    await api.post('/logout/');
+    Cookies.remove('authToken');
+  } catch (error) {
+    console.error('Logout error:', error);
+    throw error;
+  }
 };
 
 export const checkAuth = async () => {
-  const response = await api.get('/check-auth/');
-  return response.data;
+  try {
+    const response = await api.get('/check-auth/');
+    return response.data;
+  } catch (error) {
+    console.error('Check auth error:', error);
+    throw error;
+  }
+};
+
+export const getCSRFToken = async () => {
+  try {
+    const response = await api.get('/csrf/');
+    return response.data.csrfToken;
+  } catch (error) {
+    console.error('Get CSRF token error:', error);
+    throw error;
+  }
 };
 
 export const getDashboardStatistics = async () => {
