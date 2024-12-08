@@ -62,8 +62,19 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type SortOption = "earliest" | "latest" | "cheapest";
 
+// Update the tripIncludesCheckpoint function
 function tripIncludesCheckpoint(trip: Trip, checkpointId: number): boolean {
-  return trip.checkpoints.some((checkpoint) => checkpoint.id === checkpointId);
+  // Debug logging
+  console.log("Trip checkpoints:", trip.checkpoints);
+  console.log("Looking for checkpoint ID:", checkpointId);
+
+  return trip.checkpoints.some((checkpoint) => {
+    const match = checkpoint.id === checkpointId;
+    console.log(
+      `Comparing checkpoint ${checkpoint.id} with ${checkpointId}: ${match}`
+    );
+    return match;
+  });
 }
 
 // Update getPriceForCheckpoint function to handle undefined checkpointPrices
@@ -158,12 +169,22 @@ export default function TripSelection() {
     }
   };
 
+  // Update the fetchTrips function's checkpoint filtering
   const fetchTrips = async () => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await tripAPI.list();
       let fetchedTrips = response;
+
+      // Debug log the initial trips and their checkpoints
+      console.log(
+        "Initial trips:",
+        fetchedTrips.map((t) => ({
+          id: t.id,
+          checkpoints: t.checkpoints,
+        }))
+      );
 
       if (vehicleType && vehicleType !== "ALL") {
         fetchedTrips = fetchedTrips.filter(
@@ -175,9 +196,21 @@ export default function TripSelection() {
       }
 
       if (checkpoint) {
-        fetchedTrips = fetchedTrips.filter((trip) =>
-          tripIncludesCheckpoint(trip, checkpoint.id)
-        );
+        console.log("Filtering by checkpoint:", checkpoint);
+        fetchedTrips = fetchedTrips.filter((trip) => {
+          // Ensure checkpoints array exists
+          if (!trip.checkpoints) {
+            console.log(`Trip ${trip.id} has no checkpoints array`);
+            return false;
+          }
+
+          const includes = tripIncludesCheckpoint(trip, checkpoint.id);
+          console.log(
+            `Trip ${trip.id} includes checkpoint ${checkpoint.id}: ${includes}`
+          );
+          return includes;
+        });
+        console.log("Filtered trips:", fetchedTrips);
       }
 
       if (selectedCompany && selectedCompany !== "all") {
@@ -241,17 +274,24 @@ export default function TripSelection() {
       try {
         const response = await checkpointAPI.list();
         setCheckpoints(response);
+
+        // Set initial checkpoint from URL if not already set
+        const checkpointId = searchParams.get("checkpointId");
+        if (checkpointId && !checkpoint) {
+          const initialCheckpoint = response.find(
+            (cp) => cp.id === parseInt(checkpointId)
+          );
+          if (initialCheckpoint) {
+            setCheckpoint(initialCheckpoint);
+          }
+        }
       } catch (error) {
         setError("Failed to fetch checkpoints. Please try again later.");
         console.error("Failed to fetch checkpoints:", error);
       }
     };
     fetchCheckpoints();
-  }, []);
-
-  useEffect(() => {
-    fetchTrips();
-  }, [checkpoint, date, vehicleType, sortBy, selectedCompany]);
+  }, [searchParams, checkpoint]);
 
   // Move companies state update to useEffect to avoid setState during render
   useEffect(() => {
@@ -287,6 +327,23 @@ export default function TripSelection() {
       };
     }
   }, []);
+
+  // Add effect to set initial checkpoint from URL
+  useEffect(() => {
+    const fetchInitialCheckpoint = async () => {
+      try {
+        const checkpointId = searchParams.get("checkpointId");
+        if (checkpointId) {
+          const response = await checkpointAPI.get(parseInt(checkpointId));
+          setCheckpoint(response);
+        }
+      } catch (error) {
+        console.error("Failed to fetch initial checkpoint:", error);
+      }
+    };
+
+    fetchInitialCheckpoint();
+  }, [searchParams]);
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8 bg-white">
@@ -459,7 +516,7 @@ export default function TripSelection() {
                     <TableRow>
                       <TableHead>Time</TableHead>
                       <TableHead>Company</TableHead>
-                      <TableHead>Route</TableHead>
+                      <TableHead>Destination</TableHead>
                       <TableHead>Seats left</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead>Notes</TableHead>
@@ -475,7 +532,9 @@ export default function TripSelection() {
                             : "No Time"}
                         </TableCell>
                         <TableCell>{trip.transport_company.name}</TableCell>
-                        <TableCell>{trip.route.name}</TableCell>
+                        <TableCell>
+                          {checkpoint ? checkpoint.baranggay : trip.route.name}
+                        </TableCell>
                         <TableCell>
                           {trip.vehicle ? trip.vehicle.capacity : "N/A"}
                         </TableCell>

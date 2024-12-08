@@ -26,12 +26,24 @@ const formatDepartureTime = (time: string) => {
   }
 };
 
-export function TripCard({ trip, checkpoint, onBookNow }: TripCardProps) {
-  const price = checkpoint
-    ? trip.checkpointPrices.find((cp) => cp.checkpointId === checkpoint.id)
-        ?.price || trip.price
-    : trip.price;
+function getPriceForCheckpoint(trip: Trip, checkpointId: number) {
+  const checkpointPrice = trip.checkpointPrices?.find(
+    (cp) => cp.checkpointId === checkpointId
+  );
+  return checkpointPrice ? Number(checkpointPrice.price) : Number(trip.price);
+}
 
+// Update to use same checkpoint checking logic
+const hasCheckpoint = (trip: Trip, checkpointId: number | undefined) => {
+  if (!checkpointId) return false;
+  return trip.checkpoints.some((cp) => cp.id === checkpointId);
+};
+
+export function TripCard({ trip, checkpoint, onBookNow }: TripCardProps) {
+  const price =
+    checkpoint && hasCheckpoint(trip, checkpoint.id)
+      ? getPriceForCheckpoint(trip, checkpoint.id)
+      : trip.price;
   const formattedPrice = Number(price).toFixed(2);
 
   return (

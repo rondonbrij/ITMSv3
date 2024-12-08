@@ -11,8 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Seat, PassengerDetails } from "@/types/seat-types";
-import { mockAPI } from "@/lib/mock-api";
-import { getBookings } from "@/lib/mock-api"; // Add this import
+// import { mockAPI } from "@/lib/mock-api";
+// import { getBookings } from "@/lib/mock-api"; // Add this import
 
 export default function SeatSelectionPage() {
   const searchParams = useSearchParams();

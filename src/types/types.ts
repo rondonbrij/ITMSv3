@@ -91,7 +91,11 @@ export interface Trip {
   departure_time: string;
   price: number;
   route: Route;
-  checkpoints: Checkpoint[];
+  checkpoints: {
+    id: number;
+    baranggay: string;
+    passageway: number;
+  }[];
   checkpointPrices?: CheckpointPrice[];
   transport_company: TransportCompany;
   status: 'scheduled' | 'departed' | 'arrived';
