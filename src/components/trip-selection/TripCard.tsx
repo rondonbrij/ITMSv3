@@ -33,7 +33,6 @@ function getPriceForCheckpoint(trip: Trip, checkpointId: number) {
   return checkpointPrice ? Number(checkpointPrice.price) : Number(trip.price);
 }
 
-// Update to use same checkpoint checking logic
 const hasCheckpoint = (trip: Trip, checkpointId: number | undefined) => {
   if (!checkpointId) return false;
   return trip.checkpoints.some((cp) => cp.id === checkpointId);
@@ -46,11 +45,22 @@ export function TripCard({ trip, checkpoint, onBookNow }: TripCardProps) {
       : trip.price;
   const formattedPrice = Number(price).toFixed(2);
 
+  // Get destination name with fallback
+  const getDestinationName = () => {
+    if (checkpoint) {
+      return checkpoint.baranggay;
+    }
+    if (trip.route?.name) {
+      return trip.route.name;
+    }
+    return "Unknown Destination";
+  };
+
   return (
     <div className="bg-white shadow-md rounded-lg p-4 mb-4">
-      <h3 className="text-xl font-semibold mb-2">{trip.route.name}</h3>
+      <h3 className="text-xl font-semibold mb-2">{getDestinationName()}</h3>
       <div className="text-sm text-gray-600 mb-2">
-        {trip.transport_company.name}
+        {trip.transport_company?.name || "Unknown Company"}
       </div>
       <div className="flex justify-between items-center mb-4">
         <div className="text-lg font-bold">
