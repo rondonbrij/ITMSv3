@@ -1,4 +1,4 @@
-import { format, parseISO } from "date-fns";
+import { format, parseISO, addHours } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Trip, Checkpoint } from "@/types/types";
 import { Eye } from "lucide-react";
@@ -17,10 +17,15 @@ interface TripCardProps {
   onBookNow: (tripId: string) => void;
 }
 
+const convertToPHTime = (isoString: string) => {
+  const date = parseISO(isoString);
+  return addHours(date, 8); // Add 8 hours for GMT+8
+};
+
 const formatDepartureTime = (isoTime: string) => {
   try {
-    const parsedTime = parseISO(isoTime);
-    return format(parsedTime, "hh:mm a");
+    const phTime = convertToPHTime(isoTime);
+    return format(phTime, "hh:mm a");
   } catch {
     return "Invalid Time";
   }
@@ -77,7 +82,7 @@ export function TripCard({ trip, checkpoint, onBookNow }: TripCardProps) {
       <div className="flex justify-between items-center mb-4">
         <div className="text-sm">
           <span className="font-medium">Seats left:</span>{" "}
-          {trip.vehicle ? trip.vehicle.capacity : "N/A"}
+          {trip.effective_capacity}
         </div>
         <Dialog>
           <DialogTrigger asChild>

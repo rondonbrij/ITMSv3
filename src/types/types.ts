@@ -102,6 +102,9 @@ export interface Trip {
   status: 'scheduled' | 'departed' | 'arrived';
   notes?: string;
   seat_number?: string;
+  vehicle_type?: 'BUS' | 'VAN';
+  effective_vehicle_type: string;
+  effective_capacity: number;
 }
 
 export interface Booking {
