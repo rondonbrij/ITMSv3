@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { format, parseISO, addHours } from "date-fns";
+import { format, parseISO, addHours, isSameDay, startOfDay } from "date-fns";
 import {
   CalendarIcon,
   MapPin,
@@ -62,10 +62,10 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type SortOption = "earliest" | "latest" | "cheapest";
 
-// Update the tripIncludesCheckpoint function
-function tripIncludesCheckpoint(trip: Trip, checkpointId: number): boolean {
-  return trip.checkpoints.some((checkpoint) => checkpoint.id === checkpointId);
-}
+// // Update the tripIncludesCheckpoint function
+// function tripIncludesCheckpoint(trip: Trip, checkpointId: number): boolean {
+//   return trip.checkpoints.some((checkpoint) => checkpoint.id === checkpointId);
+// }
 
 // Update getPriceForCheckpoint function to handle undefined checkpointPrices
 function getPriceForCheckpoint(trip: Trip, checkpointId: number) {
@@ -192,10 +192,10 @@ export default function TripSelection() {
 
       // Filter by date - Using PH time
       if (date) {
-        const selectedDate = format(date, "yyyy-MM-dd");
+        const selectedDatePH = startOfDay(convertToPHTime(date.toISOString()));
         fetchedTrips = fetchedTrips.filter((trip) => {
-          const tripDate = format(convertToPHTime(trip.departure_time), "yyyy-MM-dd");
-          return tripDate === selectedDate;
+          const tripDatePH = convertToPHTime(trip.departure_time);
+          return isSameDay(tripDatePH, selectedDatePH);
         });
         console.log("After date filter:", fetchedTrips);
       }
@@ -211,7 +211,7 @@ export default function TripSelection() {
       // Filter by company
       if (selectedCompany && selectedCompany !== "all") {
         fetchedTrips = fetchedTrips.filter(
-          (trip) => trip.transport_company === selectedCompany
+          (trip) => trip.transport_company.name === selectedCompany
         );
         console.log("After company filter:", fetchedTrips);
       }
@@ -274,7 +274,7 @@ export default function TripSelection() {
       }
     };
     fetchCheckpoints();
-  }, [searchParams]);
+  }, [searchParams, checkpoint]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

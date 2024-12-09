@@ -71,7 +71,7 @@ export function TripCard({ trip, checkpoint, onBookNow }: TripCardProps) {
     <div className="bg-white shadow-md rounded-lg p-4 mb-4">
       <h3 className="text-xl font-semibold mb-2">{getDestinationName()}</h3>
       <div className="text-sm text-gray-600 mb-2">
-        {trip.transport_company?.name || "Unknown Company"}
+        {trip.transport_company.name || "Unknown Company"}
       </div>
       <div className="flex justify-between items-center mb-4">
         <div className="text-lg font-bold">

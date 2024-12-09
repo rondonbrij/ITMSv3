@@ -117,7 +117,7 @@ export const tripAPI = {
   get: (id: number) => getEntity<Trip>('/trips/', id),
   update: (id: number, data: Partial<Trip>) => updateEntity<Trip>('/trips/', id, data),
   delete: (id: number) => deleteEntity('/trips/', id),
-  list: () => listEntities<Trip>('/trips/'),
+  list: () => listEntities<Trip>('/trips/?include=transport_company'),
   updateStatus: (id: number, status: string) => api.patch(`/update-trip-status/${id}/`, { status }),
   getBookingDetails: (id: number) => api.get<Booking[]>(`/trip-booking-details/${id}/`),
   getTransportCompanies: () => listEntities<TransportCompany>('/transport-companies/'),
