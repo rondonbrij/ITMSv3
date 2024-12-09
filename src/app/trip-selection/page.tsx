@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { format, parse, isValid } from "date-fns";
+import { format, parse, isValid, parseISO } from "date-fns";
 import {
   CalendarIcon,
   MapPin,
@@ -79,21 +79,22 @@ function tripIncludesCheckpoint(trip: Trip, checkpointId: number): boolean {
 
 // Update getPriceForCheckpoint function to handle undefined checkpointPrices
 function getPriceForCheckpoint(trip: Trip, checkpointId: number) {
-  const checkpointPrice = trip.checkpointPrices?.find(
-    (cp) => cp.checkpointId === checkpointId
-  );
-  // Convert price to number before returning
-  return checkpointPrice ? Number(checkpointPrice.price) : Number(trip.price);
+  // Find the checkpoint in the trip's checkpoints
+  const checkpoint = trip.checkpoints.find(cp => cp.id === checkpointId);
+  if (!checkpoint) return Number(trip.price);
+
+  // Find the passageway that contains this checkpoint
+  const passageway = trip.route.destinations
+    .flatMap(dest => dest.passageways)
+    .find(p => p.checkpoints.some(cp => cp.id === checkpointId));
+
+  return passageway ? Number(passageway.price) : Number(trip.price);
 }
 
-const formatDepartureTime = (time: string) => {
+const formatDepartureTime = (isoTime: string) => {
   try {
-    // Assuming time comes in "HH:mm" format from backend
-    const parsedTime = parse(time, "HH:mm", new Date());
-    if (isValid(parsedTime)) {
-      return format(parsedTime, "hh:mm a");
-    }
-    return "Invalid Time";
+    const parsedTime = parseISO(isoTime);
+    return format(parsedTime, "hh:mm a");
   } catch {
     return "Invalid Time";
   }
@@ -231,14 +232,10 @@ export default function TripSelection() {
       }
 
       const now = new Date();
-      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
-        .getMinutes()
-        .toString()
-        .padStart(2, "0")}`;
-
       fetchedTrips = fetchedTrips.filter((trip) => {
+        const tripTime = parseISO(trip.departure_time);
         if (format(date, "yyyy-MM-dd") === format(now, "yyyy-MM-dd")) {
-          return trip.departure_time > currentTime;
+          return tripTime > now;
         }
         return true;
       });

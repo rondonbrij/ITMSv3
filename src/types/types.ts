@@ -11,6 +11,7 @@ export interface Destination {
   id: number;
   name: string;
   price: number;
+  passageways: Passageway[];
 }
 
 export interface Vehicle {
@@ -62,7 +63,7 @@ export interface Driver {
 export interface Route {
   id: number;
   name: string;
-  destinations: number[];
+  destinations: Destination[];
 }
 
 export interface Passageway {
@@ -70,6 +71,7 @@ export interface Passageway {
   destination: number;
   name: string;
   price: number;
+  checkpoints: Checkpoint[];
 }
 
 export interface Checkpoint {
@@ -88,7 +90,7 @@ export interface Trip {
   destination: number;
   vehicle?: Vehicle;
   driver?: Driver;
-  departure_time: string;
+  departure_time: string; // ISO format datetime string
   price: number;
   route: Route;
   checkpoints: {
@@ -96,7 +98,6 @@ export interface Trip {
     baranggay: string;
     passageway: number;
   }[];
-  checkpointPrices?: CheckpointPrice[];
   transport_company: TransportCompany;
   status: 'scheduled' | 'departed' | 'arrived';
   notes?: string;

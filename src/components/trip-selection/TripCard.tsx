@@ -1,4 +1,4 @@
-import { format, parse } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Trip, Checkpoint } from "@/types/types";
 import { Eye } from "lucide-react";
@@ -17,9 +17,9 @@ interface TripCardProps {
   onBookNow: (tripId: string) => void;
 }
 
-const formatDepartureTime = (time: string) => {
+const formatDepartureTime = (isoTime: string) => {
   try {
-    const parsedTime = parse(time, "HH:mm", new Date());
+    const parsedTime = parseISO(isoTime);
     return format(parsedTime, "hh:mm a");
   } catch {
     return "Invalid Time";
@@ -27,10 +27,16 @@ const formatDepartureTime = (time: string) => {
 };
 
 function getPriceForCheckpoint(trip: Trip, checkpointId: number) {
-  const checkpointPrice = trip.checkpointPrices?.find(
-    (cp) => cp.checkpointId === checkpointId
-  );
-  return checkpointPrice ? Number(checkpointPrice.price) : Number(trip.price);
+  // Find the checkpoint in the trip's checkpoints
+  const checkpoint = trip.checkpoints.find(cp => cp.id === checkpointId);
+  if (!checkpoint) return Number(trip.price);
+
+  // Find the passageway that contains this checkpoint
+  const passageway = trip.route.destinations
+    .flatMap(dest => dest.passageways)
+    .find(p => p.checkpoints.some(cp => cp.id === checkpointId));
+
+  return passageway ? Number(passageway.price) : Number(trip.price);
 }
 
 const hasCheckpoint = (trip: Trip, checkpointId: number | undefined) => {
