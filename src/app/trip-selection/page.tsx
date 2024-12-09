@@ -99,6 +99,17 @@ const formatDepartureTime = (time: string) => {
   }
 };
 
+// Add this helper function near the top
+const getDestinationName = (trip: Trip, checkpoint: Checkpoint | null) => {
+  if (checkpoint) {
+    return checkpoint.baranggay;
+  }
+  if (trip.route?.name) {
+    return trip.route.name;
+  }
+  return "Unknown Destination";
+};
+
 export default function TripSelection() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -523,7 +534,7 @@ export default function TripSelection() {
                         </TableCell>
                         <TableCell>{trip.transport_company.name}</TableCell>
                         <TableCell>
-                          {checkpoint ? checkpoint.baranggay : trip.route.name}
+                          {getDestinationName(trip, checkpoint)}
                         </TableCell>
                         <TableCell>
                           {trip.vehicle ? trip.vehicle.capacity : "N/A"}
