@@ -14,7 +14,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Card, CardContent } from "@/components/ui/card";
-import { PaginatedAnnouncements } from "@/types/types";
+import { PaginatedAnnouncements } from "@/types/mocktypes";
 
 export default function AnnouncementsPage() {
   const [paginatedAnnouncements, setPaginatedAnnouncements] =

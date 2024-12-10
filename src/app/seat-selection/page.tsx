@@ -11,14 +11,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Seat, PassengerDetails } from "@/types/seat-types";
-// import { mockAPI } from "@/lib/mock-api";
-// import { getBookings } from "@/lib/mock-api"; // Add this import
+import { mockAPI } from "@/lib/mockapi";  // Add this import at the top
+import { Trip } from "@/types/mocktypes"; // Import Trip type
 
 export default function SeatSelectionPage() {
   const searchParams = useSearchParams();
   const tripId = searchParams.get("tripId");
   const destination = searchParams.get("destination") || "";
 
+  const [trip, setTrip] = useState<Trip | null>(null); // Add state for trip
   const [vehicleType, setVehicleType] = useState<"BUS" | "VAN">("BUS");
   const [seats, setSeats] = useState<Seat[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<Seat[]>([]);
@@ -37,39 +38,18 @@ export default function SeatSelectionPage() {
     const fetchTripDetails = async () => {
       if (tripId) {
         try {
-          const response = await mockAPI.getTrip(Number(tripId));
-          const trip = response.data;
-          setVehicleType(trip.vehicle.vehicle_type as "BUS" | "VAN");
-
-          // If no destination selected, use the endpoint (last checkpoint)
-          if (!destination) {
-            const endpoint =
-              trip.route.checkpoints[trip.route.checkpoints.length - 1];
-            const endpointPrice = trip.checkpointPrices.find(
-              (cp) => cp.checkpointId === endpoint.id
-            );
-            setFarePerSeat(endpointPrice ? endpointPrice.price : trip.price);
-            return;
+          const trip = await mockAPI.trip.get(tripId);
+          if (!trip) {
+            throw new Error("Trip not found");
           }
-
-          // If destination is selected, find the checkpoint price
-          const checkpoint = trip.route.checkpoints.find(
-            (cp) => cp.name.toLowerCase() === destination.toLowerCase()
-          );
-          if (checkpoint) {
-            const checkpointPrice = trip.checkpointPrices.find(
-              (cp) => cp.checkpointId === checkpoint.id
-            );
-            if (checkpointPrice) {
-              setFarePerSeat(checkpointPrice.price);
-              return;
-            }
-          }
-
-          // Fallback to trip price if no prices found
+          setTrip(trip);
           setFarePerSeat(trip.price);
-        } catch (error) {
-          console.error("Failed to fetch trip details:", error);
+          setVehicleType(trip.effective_vehicle_type as "BUS" | "VAN"); // Update vehicle type based on trip details
+        } catch (err) {
+          const error = err as Error;
+          console.error("Failed to fetch trip details:", error.message);
+          // Optionally set an error state here
+          // setError("Failed to fetch trip details");
         }
       }
     };
@@ -80,17 +60,14 @@ export default function SeatSelectionPage() {
     const fetchBookedSeats = async () => {
       if (tripId) {
         try {
-          const response = await mockAPI.getBookings();
-          const allBookings = response.data;
-          const tripBookings = allBookings.filter(
-            (booking) => booking.trip.id === Number(tripId)
-          );
-          const seats = tripBookings.flatMap((booking) =>
-            booking.passenger_info.map((info) => info.seatNumber)
-          );
+          // Since this is mock data, you might want to simulate booked seats
+          const seats = []; // Add mock booked seats as needed
           setBookedSeats(seats);
-        } catch (error) {
-          console.error("Failed to fetch bookings:", error);
+        } catch (err) {
+          const error = err as Error;
+          console.error("Failed to fetch bookings:", error.message);
+          // Optionally set an error state here
+          // setError("Failed to fetch bookings");
         }
       }
     };

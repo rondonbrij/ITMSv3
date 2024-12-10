@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Announcement } from "@/types/types";
+import { Announcement } from "@/types/mocktypes";
 import {
   getAnnouncement,
   getOtherAnnouncements,

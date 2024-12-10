@@ -1,18 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format, parseISO, addHours } from "date-fns";
-import {
-  CalendarIcon,
-  MapPin,
-  PhilippinePeso,
-  ClockArrowDown,
-  ClockArrowUp,
-  Bus,
-  Building2,
-  Eye,
-} from "lucide-react";
+import { CalendarIcon, MapPin, PoundSterlingIcon as PhilippinePeso, ClockIcon as ClockArrowDown, ArrowUpIcon as ClockArrowUp, Bus, Building2, Eye } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -51,8 +42,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { tripAPI, checkpointAPI, transportCompanyAPI } from "@/lib/api";
-import { Trip, Checkpoint, TransportCompany } from "@/types/types";
+import { mockAPI } from "@/lib/mockapi";
+import { Trip, Checkpoint, TransportCompany } from "@/types/mocktypes";
 import { useAcknowledgment } from "@/components/acknowledgment-modal-provider";
 import { PrivacyPolicyModal } from "@/components/privacy-policy-modal";
 import { TermsOfServiceModal } from "@/components/terms-of-service-modal";
@@ -62,27 +53,34 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type SortOption = "earliest" | "latest" | "cheapest";
 
-// Update the tripIncludesCheckpoint function
-function tripIncludesCheckpoint(trip: Trip, checkpointId: number): boolean {
-  return trip.checkpoints.some((checkpoint) => checkpoint.id === checkpointId);
+
+function tripHasCheckpoint(trip: Trip, checkpointId: number): boolean {
+  return trip.route.destinations.some(destination =>
+    destination.passageways.some(passageway =>
+      passageway.checkpoints.some(cp => cp.id === checkpointId)
+    )
+  );
 }
 
-// Update getPriceForCheckpoint function to handle undefined checkpointPrices
 function getPriceForCheckpoint(trip: Trip, checkpointId: number) {
-  const checkpoint = trip.checkpoints.find(cp => cp.id === checkpointId);
-  if (!checkpoint) return Number(trip.price);
-
-  const passageway = trip.route.destinations
-    .flatMap(dest => dest.passageways)
-    .find(p => p.checkpoints.some(cp => cp.id === checkpointId));
-
-  return passageway ? Number(passageway.price) : Number(trip.price);
+  try {
+    for (const destination of trip.route.destinations) {
+      for (const passageway of destination.passageways) {
+        if (passageway.checkpoints.some(cp => cp.id === checkpointId)) {
+          return passageway.price;
+        }
+      }
+    }
+    return 0; // Return 0 if checkpoint not found instead of throwing error
+  } catch (error) {
+    console.error('Error getting price for checkpoint:', error);
+    return 0;
+  }
 }
 
-// Add this helper function to convert to PH time (GMT+8)
 const convertToPHTime = (isoString: string) => {
   const date = parseISO(isoString);
-  return addHours(date, 8); // Add 8 hours for GMT+8
+  return addHours(date, 8);
 };
 
 const formatDepartureTime = (isoTime: string) => {
@@ -101,6 +99,10 @@ const getDestinationName = (trip: Trip, checkpoint: Checkpoint | null) => {
   if (trip.route?.name) {
     return trip.route.name;
   }
+  // Derive destination name from the route's destinations
+  if (trip.route.destinations.length > 0) {
+    return trip.route.destinations[trip.route.destinations.length - 1].name;
+  }
   return "Unknown Destination";
 };
 
@@ -115,7 +117,7 @@ export default function TripSelection() {
     searchParams.get("date") ? new Date(searchParams.get("date")!) : new Date()
   );
   const [vehicleType, setVehicleType] = useState<string>(
-    searchParams.get("vehicleType") || ""
+    searchParams.get("vehicleType") || "ALL"  // Change default to "ALL"
   );
   const [sortBy, setSortBy] = useState<SortOption>("earliest");
   const [selectedCompany, setSelectedCompany] = useState<string>("all");
@@ -136,7 +138,7 @@ export default function TripSelection() {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await transportCompanyAPI.list();
+        const response = await mockAPI.transportCompany.list();
         setCompanies(response);
       } catch (error) {
         console.error("Failed to fetch transport companies:", error);
@@ -148,20 +150,14 @@ export default function TripSelection() {
     fetchCompanies();
   }, []);
 
-  const filteredCompanies = companies.filter((company) => {
+  const filteredCompanies = companies.filter(() => {
     if (vehicleType === "BUS") {
-      return ["Cherry Bus", "Roro Bus"].includes(company.name);
+      return true; // Include all companies for BUS
     }
     if (vehicleType === "VAN") {
-      return [
-        "Langgam Transport",
-        "Lexus Transport",
-        "Palshutex Transport",
-        "Quezon Transport",
-        "Barakkah Transport",
-      ].includes(company.name);
+      return true; // Include all companies for VAN
     }
-    return true;
+    return true; // Include all companies for ALL
   });
 
   const handleBookNow = (tripId: string) => {
@@ -174,20 +170,18 @@ export default function TripSelection() {
     }
   };
 
-  const fetchTrips = async () => {
+  const fetchTrips = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await tripAPI.list();
+      const response = await mockAPI.trip.list();
       let fetchedTrips = response;
-      console.log("Initial trips:", fetchedTrips);
 
-      // Filter by checkpoint first
+      // Filter by checkpoint
       if (checkpoint) {
         fetchedTrips = fetchedTrips.filter((trip) =>
-          trip.checkpoints.some(cp => cp.id === checkpoint.id)
+          tripHasCheckpoint(trip, checkpoint.id)
         );
-        console.log("After checkpoint filter:", fetchedTrips);
       }
 
       // Filter by date - Using PH time
@@ -197,7 +191,6 @@ export default function TripSelection() {
           const tripDate = format(convertToPHTime(trip.departure_time), "yyyy-MM-dd");
           return tripDate === selectedDate;
         });
-        console.log("After date filter:", fetchedTrips);
       }
 
       // Filter by vehicle type
@@ -205,15 +198,13 @@ export default function TripSelection() {
         fetchedTrips = fetchedTrips.filter(
           (trip) => trip.effective_vehicle_type === vehicleType.toUpperCase()
         );
-        console.log("After vehicle type filter:", fetchedTrips);
       }
 
       // Filter by company
       if (selectedCompany && selectedCompany !== "all") {
         fetchedTrips = fetchedTrips.filter(
-          (trip) => trip.transport_company === selectedCompany
+          (trip) => trip.transport_company.name === selectedCompany
         );
-        console.log("After company filter:", fetchedTrips);
       }
 
       // Sort trips using PH time
@@ -232,18 +223,13 @@ export default function TripSelection() {
           break;
         case "cheapest":
           fetchedTrips.sort((a, b) => {
-            const priceA = checkpoint
-              ? getPriceForCheckpoint(a, checkpoint.id)
-              : a.price;
-            const priceB = checkpoint
-              ? getPriceForCheckpoint(b, checkpoint.id)
-              : b.price;
+            const priceA = checkpoint ? getPriceForCheckpoint(a, checkpoint.id) : 0;
+            const priceB = checkpoint ? getPriceForCheckpoint(b, checkpoint.id) : 0;
             return priceA - priceB;
           });
           break;
       }
 
-      console.log("Final trips:", fetchedTrips);
       setTrips(fetchedTrips);
     } catch (error) {
       setError("Failed to fetch trips. Please try again later.");
@@ -251,12 +237,12 @@ export default function TripSelection() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [checkpoint, date, vehicleType, sortBy, selectedCompany]);
 
   useEffect(() => {
     const fetchCheckpoints = async () => {
       try {
-        const response = await checkpointAPI.list();
+        const response = await mockAPI.checkpoint.list();
         setCheckpoints(response);
 
         const checkpointId = searchParams.get("checkpointId");
@@ -274,7 +260,7 @@ export default function TripSelection() {
       }
     };
     fetchCheckpoints();
-  }, [searchParams]);
+  }, [checkpoint, searchParams]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -300,8 +286,10 @@ export default function TripSelection() {
       try {
         const checkpointId = searchParams.get("checkpointId");
         if (checkpointId) {
-          const response = await checkpointAPI.get(parseInt(checkpointId));
-          setCheckpoint(response);
+          const response = await mockAPI.checkpoint.get(parseInt(checkpointId));
+          if (response) {
+            setCheckpoint(response);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch initial checkpoint:", error);
@@ -313,7 +301,7 @@ export default function TripSelection() {
 
   useEffect(() => {
     fetchTrips();
-  }, [checkpoint, date, vehicleType, sortBy, selectedCompany]);
+  }, [checkpoint, date, vehicleType, sortBy, selectedCompany, fetchTrips]);
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8 bg-white">
@@ -509,12 +497,11 @@ export default function TripSelection() {
                           {trip.effective_capacity}
                         </TableCell>
                         <TableCell>
-                          ₱
-                          {checkpoint
-                            ? Number(
-                                getPriceForCheckpoint(trip, checkpoint.id)
-                              ).toFixed(2)
-                            : Number(trip.price).toFixed(2)}
+                          {checkpoint ? (
+                            `₱${getPriceForCheckpoint(trip, checkpoint.id).toFixed(2)}`
+                          ) : (
+                            "Select checkpoint"
+                          )}
                         </TableCell>
                         <TableCell>
                           <Dialog>

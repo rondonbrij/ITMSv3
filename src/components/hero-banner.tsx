@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Search } from "lucide-react";
+import { Search } from 'lucide-react';
 import {
   Command,
   CommandList,
@@ -16,8 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { checkpointAPI } from "@/lib/api";
-import { Checkpoint } from "@/types/types";
+import { mockAPI } from "@/lib/mockapi";
+import { Checkpoint } from "@/types/mocktypes";
 
 function HeroBanner() {
   const router = useRouter();
@@ -30,7 +30,7 @@ function HeroBanner() {
   useEffect(() => {
     const fetchCheckpoints = async () => {
       try {
-        const fetchedCheckpoints = await checkpointAPI.list();
+        const fetchedCheckpoints = await mockAPI.checkpoint.list();
         setCheckpoints(fetchedCheckpoints);
       } catch (error) {
         console.error("Failed to fetch checkpoints:", error);
@@ -143,3 +143,4 @@ function HeroBanner() {
 }
 
 export default HeroBanner;
+
