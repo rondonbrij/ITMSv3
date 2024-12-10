@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation"; // Added useRouter
+import { useSearchParams, useRouter } from "next/navigation";
 import { BusLayout } from "@/components/seat-selection/bus-layout";
 import { VanLayout } from "@/components/seat-selection/van-layout";
 import {
@@ -9,24 +9,31 @@ import {
   PassengerFormHandles,
 } from "@/components/seat-selection/passenger-form";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Seat, PassengerDetails } from "@/types/seat-types";
-// import { mockAPI } from "@/lib/mock-api";
-// import { getBookings } from "@/lib/mock-api"; // Add this import
+import { getTripDetails, bookingAPI } from "@/lib/api"; // Import updated API functions
 
 export default function SeatSelectionPage() {
   const searchParams = useSearchParams();
   const tripId = searchParams.get("tripId");
-  const destination = searchParams.get("destination") || "";
+  const checkpointId = searchParams.get("checkpointId");
 
+  // Initialize vehicleType and capacity with default values
   const [vehicleType, setVehicleType] = useState<"BUS" | "VAN">("BUS");
+  const [capacity, setCapacity] = useState<number>(66);
+
   const [seats, setSeats] = useState<Seat[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<Seat[]>([]);
   const [passengers, setPassengers] = useState<PassengerDetails[]>([]);
   const [farePerSeat, setFarePerSeat] = useState<number>(0);
-  const [bookedSeats, setBookedSeats] = useState<number[]>([]); // New state to hold booked seat numbers
+  const [bookedSeats, setBookedSeats] = useState<number[]>([]);
   const [completedForms, setCompletedForms] = useState<Set<number>>(new Set());
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
 
   // Store refs to each PassengerForm
   const passengerFormRefs = useRef<Map<number, PassengerFormHandles>>(
@@ -37,56 +44,43 @@ export default function SeatSelectionPage() {
     const fetchTripDetails = async () => {
       if (tripId) {
         try {
-          const response = await mockAPI.getTrip(Number(tripId));
-          const trip = response.data;
-          setVehicleType(trip.vehicle.vehicle_type as "BUS" | "VAN");
+          const trip = await getTripDetails(Number(tripId)); // Fetch trip details using axios
+          if (trip) {
+            // Set vehicle type based on effective_vehicle_type
+            setVehicleType(trip.effective_vehicle_type as "BUS" | "VAN");
+            setCapacity(trip.effective_capacity);
 
-          // If no destination selected, use the endpoint (last checkpoint)
-          if (!destination) {
-            const endpoint =
-              trip.route.checkpoints[trip.route.checkpoints.length - 1];
-            const endpointPrice = trip.checkpointPrices.find(
-              (cp) => cp.checkpointId === endpoint.id
-            );
-            setFarePerSeat(endpointPrice ? endpointPrice.price : trip.price);
-            return;
-          }
-
-          // If destination is selected, find the checkpoint price
-          const checkpoint = trip.route.checkpoints.find(
-            (cp) => cp.name.toLowerCase() === destination.toLowerCase()
-          );
-          if (checkpoint) {
-            const checkpointPrice = trip.checkpointPrices.find(
-              (cp) => cp.checkpointId === checkpoint.id
-            );
-            if (checkpointPrice) {
-              setFarePerSeat(checkpointPrice.price);
-              return;
+            // Calculate fare per seat based on the checkpoint price
+            let calculatedFare = Number(trip.price);
+            if (trip.route && trip.route.destinations && checkpointId) {
+              for (const destination of trip.route.destinations) {
+                for (const passageway of destination.passageways) {
+                  if (passageway.checkpoints.some(cp => cp.id === Number(checkpointId))) {
+                    calculatedFare = Number(passageway.price);
+                    break;
+                  }
+                }
+              }
             }
+            setFarePerSeat(calculatedFare);
           }
-
-          // Fallback to trip price if no prices found
-          setFarePerSeat(trip.price);
         } catch (error) {
           console.error("Failed to fetch trip details:", error);
         }
       }
     };
     fetchTripDetails();
-  }, [tripId, destination]);
+  }, [tripId, checkpointId]);
 
   useEffect(() => {
     const fetchBookedSeats = async () => {
       if (tripId) {
         try {
-          const response = await mockAPI.getBookings();
-          const allBookings = response.data;
-          const tripBookings = allBookings.filter(
-            (booking) => booking.trip.id === Number(tripId)
+          const bookings = await bookingAPI.getBookingsByTripId(
+            Number(tripId)
           );
-          const seats = tripBookings.flatMap((booking) =>
-            booking.passenger_info.map((info) => info.seatNumber)
+          const seats = bookings.flatMap((booking) =>
+            booking.passenger_info.map((info) => info.seat_number)
           );
           setBookedSeats(seats);
         } catch (error) {
@@ -100,7 +94,7 @@ export default function SeatSelectionPage() {
   useEffect(() => {
     // Fetch booked seats and initialize seat statuses
     const initializeSeats = () => {
-      const totalSeats = vehicleType === "BUS" ? 66 : 15;
+      const totalSeats = capacity;
       const newSeats = Array.from({ length: totalSeats }, (_, i) => ({
         id: `seat-${i + 1}`,
         number: i + 1,
@@ -109,7 +103,7 @@ export default function SeatSelectionPage() {
       setSeats(newSeats);
     };
     initializeSeats();
-  }, [vehicleType, bookedSeats]);
+  }, [vehicleType, bookedSeats, capacity]);
 
   const handleSeatClick = (clickedSeat: Seat) => {
     if (clickedSeat.status === "booked") return;
@@ -146,7 +140,6 @@ export default function SeatSelectionPage() {
     setSelectedSeats(updatedSelectedSeats);
   };
 
-  // Modify handlePassengerSubmit to ensure correct data types
   const handlePassengerSubmit = (data: PassengerDetails) => {
     const updatedData = {
       ...data,
@@ -200,7 +193,7 @@ export default function SeatSelectionPage() {
         selectedSeats,
         passengers: passengersData,
         tripId,
-        destination,
+        checkpointId,
         farePerSeat,
       })
     );
@@ -251,7 +244,9 @@ export default function SeatSelectionPage() {
               </div>
               <div className="flex justify-between font-bold">
                 <span>Total:</span>
-                <span>₱ {(selectedSeats.length * farePerSeat).toFixed(2)}</span>
+                <span>
+                  ₱ {(selectedSeats.length * farePerSeat).toFixed(2)}
+                </span>
               </div>
             </div>
             <Button

@@ -129,6 +129,12 @@ export const bookingAPI = {
   update: (id: number, data: Partial<Booking>) => updateEntity<Booking>('/bookings/', id, data),
   delete: (id: number) => deleteEntity('/bookings/', id),
   list: () => listEntities<Booking>('/bookings/'),
+  getBookingsByTripId: async (tripId: number) => {
+    const response = await api.get<Booking[]>(
+      `/bookings/?trip_id=${tripId}`
+    );
+    return response.data;
+  },
 };
 
 export const passengerInfoAPI = {
@@ -187,6 +193,10 @@ export const getRecentBookings = async () => {
   return response.data;
 };
 
+export async function getTripDetails(tripId: number) {
+  const response = await api.get<Trip>(`/trips/${tripId}/`); // Use axios instance
+  return response.data;
+}
 
 export default api;
 

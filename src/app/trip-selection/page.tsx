@@ -164,11 +164,9 @@ export default function TripSelection() {
     return true;
   });
 
-  const handleBookNow = (tripId: string) => {
+  const handleBookNow = (tripId: string, checkpointId: number) => {
     if (hasAgreed) {
-      router.push(
-        `/seat-selection?tripId=${tripId}&checkpointId=${checkpoint?.id}`
-      );
+      router.push(`/seat-selection?tripId=${tripId}&checkpointId=${checkpointId}`);
     } else {
       setShowAcknowledgmentModal(true);
     }
@@ -476,7 +474,7 @@ export default function TripSelection() {
                     key={trip.id}
                     trip={trip}
                     checkpoint={checkpoint}
-                    onBookNow={handleBookNow}
+                    onBookNow={() => handleBookNow(trip.id, checkpoint?.id || 0)}
                   />
                 ))}
               </div>
@@ -537,7 +535,7 @@ export default function TripSelection() {
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
-                            onClick={() => handleBookNow(trip.id)}
+                            onClick={() => handleBookNow(trip.id, checkpoint?.id || 0)}
                             className="bg-blue-500 hover:bg-primary text-white"
                           >
                             Book Seats
