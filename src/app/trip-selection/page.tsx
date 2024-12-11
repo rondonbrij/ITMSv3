@@ -193,14 +193,14 @@ export default function TripSelection() {
         });
       }
 
-      // Filter by vehicle type
+      // Filter by vehicle type if selected
       if (vehicleType && vehicleType !== "ALL") {
         fetchedTrips = fetchedTrips.filter(
-          (trip) => trip.effective_vehicle_type === vehicleType.toUpperCase()
+          (trip) => trip.effective_vehicle_type.toUpperCase() === vehicleType.toUpperCase()
         );
       }
 
-      // Filter by company
+      // Filter by company if selected
       if (selectedCompany && selectedCompany !== "all") {
         fetchedTrips = fetchedTrips.filter(
           (trip) => trip.transport_company.name === selectedCompany
@@ -542,3 +542,4 @@ export default function TripSelection() {
     </div>
   );
 }
+

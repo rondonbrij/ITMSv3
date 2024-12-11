@@ -2,15 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchBookingDetails } from "@/lib/api";
-import { BookingDetails } from "@/types/mocktypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
-import Image from "next/image";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,31 +15,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { generateETicket } from "@/lib/eticket";
 
 export default function PaymentPage() {
   const router = useRouter();
-  const [booking, setBooking] = useState<any>(null); // Adjust type as needed
+  const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("gcash");
-  const [isEnlarged, setIsEnlarged] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [showPaidButton, setShowPaidButton] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [eTicketUrl, setETicketUrl] = useState("");
 
   useEffect(() => {
     const storedBookingData = localStorage.getItem("bookingData");
     if (storedBookingData) {
       const bookingData = JSON.parse(storedBookingData);
-
-      // Convert passenger birthdays back to Date objects
       bookingData.passengers = bookingData.passengers.map(
-        (passenger: PassengerDetails) => ({
+        (passenger: any) => ({
           ...passenger,
           birthday: new Date(passenger.birthday),
         })
       );
-
+      bookingData.tripDate = new Date(bookingData.tripDate);
       setBooking(bookingData);
       setLoading(false);
     } else {
@@ -61,16 +53,66 @@ export default function PaymentPage() {
     return <div>{error || "Booking not found"}</div>;
   }
 
-  const { passengers, selectedSeats, tripId, destination, farePerSeat } =
-    booking;
+  const { passengers, farePerSeat, tripDate, tripTime, vehicleCompany, checkpointName } = booking;
   const numberOfPassengers = passengers.length;
   const totalPrice = farePerSeat * numberOfPassengers;
 
-  const handlePaid = () => {
-    setShowConfirmation(true);
+  const sendConfirmationEmail = async (booking: any, eTicketUrl: string) => {
+    const primaryPassenger = booking.passengers[0];
+    const emailHtml = `
+      <h1>Booking Confirmation</h1>
+      <p>Dear ${primaryPassenger.firstName},</p>
+      <p>Your booking has been confirmed. Here are the details:</p>
+      <ul>
+        <li>Trip Date: ${format(new Date(booking.tripDate), "MMMM d, yyyy")}</li>
+        <li>Trip Time: ${booking.tripTime}</li>
+        <li>Trip Route: Irawan to ${booking.checkpointName}</li>
+        <li>Vehicle Company: ${booking.vehicleCompany}</li>
+      </ul>
+      <p>Your e-ticket is attached to this email.</p>
+      <p>Thank you for choosing our service!</p>
+    `;
+
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: primaryPassenger.email,
+          subject: 'Booking Confirmation',
+          html: emailHtml,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      throw error;
+    }
   };
 
-  const handleReturnHome = () => {
+  const handlePaid = async () => {
+    try {
+      // Generate e-ticket
+      const eTicketData = await generateETicket(booking);
+      setETicketUrl(eTicketData.url);
+
+      // Send confirmation email
+      await sendConfirmationEmail(booking, eTicketData.url);
+
+      setShowConfirmation(true);
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      setError("Failed to process payment. Please try again.");
+    }
+  };
+
+  const handleCloseConfirmation = () => {
+    setShowConfirmation(false);
     router.push("/");
   };
 
@@ -84,14 +126,16 @@ export default function PaymentPage() {
               <CardTitle className="text-xl font-bold">Trip Details</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Trip ID: {tripId}</p>
-              <p>Destination: {destination}</p>
+              <p>Trip Date: {format(new Date(tripDate), "MMMM d, yyyy")}</p>
+              <p>Trip Time: {tripTime}</p>
+              <p>Trip Route: Irawan to {checkpointName}</p>
+              <p>Vehicle Company: {vehicleCompany}</p>
               <p>Fare per Seat: ₱{farePerSeat}</p>
             </CardContent>
           </Card>
 
           {/* Passenger Details */}
-          {passengers.map((passenger: PassengerDetails, index: number) => (
+          {passengers.map((passenger: any, index: number) => (
             <Card key={index}>
               <CardHeader>
                 <CardTitle className="text-xl font-bold">
@@ -116,54 +160,6 @@ export default function PaymentPage() {
               <CardTitle className="text-xl font-bold">Payment</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <RadioGroup
-                value={paymentMethod}
-                onValueChange={setPaymentMethod}
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="gcash" id="gcash" />
-                  <Label htmlFor="gcash">GCash</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="credit" id="credit" disabled />
-                  <Label htmlFor="credit" className="opacity-50">
-                    Credit/Debit Card (Currently Unavailable)
-                  </Label>
-                </div>
-              </RadioGroup>
-
-              {paymentMethod === "gcash" && (
-                <div className="space-y-4">
-                  <p className="font-semibold">Scan QR using the GCash App</p>
-                  <Card className="relative">
-                    <CardContent className="p-4">
-                      <Image
-                        src="/images/qr.png"
-                        alt="GCash QR Code"
-                        width={isEnlarged ? 400 : 200}
-                        height={isEnlarged ? 400 : 200}
-                        className="mx-auto"
-                      />
-                      <Button
-                        onClick={() => setIsEnlarged(!isEnlarged)}
-                        className="mt-4 w-full"
-                      >
-                        {isEnlarged ? "Retract" : "Enlarge"}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                  <div className="space-y-2 text-sm">
-                    <p>Instructions:</p>
-                    <ol className="list-decimal list-inside space-y-1">
-                      <li>Open GCash app on your phone</li>
-                      <li>Select &#34;Pay QR&#34;</li>
-                      <li>Align your phone camera to scan the QR code</li>
-                      <li>Press the &#34;Pay&#34; button in the GCash app</li>
-                    </ol>
-                  </div>
-                </div>
-              )}
-
               <p className="font-bold text-lg">
                 Total Payment: ₱{totalPrice.toFixed(2)}
               </p>
@@ -185,30 +181,31 @@ export default function PaymentPage() {
                 <Button variant="outline" onClick={() => router.back()}>
                   Back
                 </Button>
-                {paymentMethod === "gcash" &&
-                  agreeTerms &&
-                  (showPaidButton ? (
-                    <Button onClick={handlePaid}>Paid</Button>
-                  ) : (
-                    <Button disabled>Pay Now</Button>
-                  ))}
+                <Button onClick={handlePaid} disabled={!agreeTerms}>
+                  Pay Now
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
 
+      {error && <p className="text-red-500">{error}</p>}
+
       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Booking Confirmed</AlertDialogTitle>
             <AlertDialogDescription>
-              Your booking tickets will be sent to you in a moment.
+              Your booking is confirmed and an e-ticket has been sent to your email.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={handleReturnHome}>
-              Return Home
+          <AlertDialogFooter className="flex flex-col space-y-2">
+            <Button onClick={() => window.open(eTicketUrl, '_blank')}>
+              Download E-Ticket
+            </Button>
+            <AlertDialogAction onClick={handleCloseConfirmation}>
+              Close
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -216,3 +213,4 @@ export default function PaymentPage() {
     </div>
   );
 }
+

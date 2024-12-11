@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Facebook, Instagram, Twitter, Send } from "lucide-react";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Facebook, Instagram, Twitter, Send } from "lucide-react";
+import { Facebook, Instagram, Twitter } from "lucide-react";
 import { PrivacyPolicyModal } from "./privacy-policy-modal";
 import { TermsOfServiceModal } from "./terms-of-service-modal";
 
@@ -76,7 +77,7 @@ export default function Footer() {
 
           <div className="space-y-4">
             <h4 className="font-semibold">Stay Updated</h4>
-            <form className="flex gap-2">
+            {/* <form className="flex gap-2">
               <Input
                 type="email"
                 placeholder="Enter your email"
@@ -85,7 +86,7 @@ export default function Footer() {
               <Button type="submit" size="icon">
                 <Send className="h-4 w-4" />
               </Button>
-            </form>
+            </form> */}
             <div className="flex gap-4">
               <Link
                 href="#"

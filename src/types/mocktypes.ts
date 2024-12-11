@@ -74,3 +74,24 @@ export interface Trip {
   effective_capacity: number;
 }
 
+export interface Booking {
+  id: string;
+  trip: Trip;
+  booking_code: string;
+  status: string;
+  created_at: string;
+  total_passengers: number;
+  total_packages: number;
+}
+
+export interface PassengerInfo {
+  id: string;
+  booking: Booking;
+  first_name: string;
+  last_name: string;
+  email: string;
+  contact_number: string;
+  birthday: string;
+  seat_number: string;
+}
+

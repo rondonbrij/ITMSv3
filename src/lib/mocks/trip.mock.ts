@@ -7,7 +7,7 @@ export const mockTrips: Trip[] = [
     id: "1",
     vehicle_id: 1,
     driver_id: 1,
-    departure_time: "2024-12-17T08:00:00Z",
+    departure_time: "2024-12-16T01:30:00Z",
     route: mockRoutes[0],
     transport_company: mockTransportCompanies[0], 
     status: "scheduled",
@@ -31,8 +31,7 @@ export const mockTrips: Trip[] = [
     id: "3",
     vehicle_id: 3,
     driver_id: 3,
-    departure_time: "2024-12-17T08:30:00Z",
-
+    departure_time: "2024-12-16T04:30:00Z",
     route: mockRoutes[1], 
     transport_company: mockTransportCompanies[2],
     status: "scheduled",
@@ -44,8 +43,7 @@ export const mockTrips: Trip[] = [
     id: "4",
     vehicle_id: 4,
     driver_id: 4,
-    departure_time: "2024-12-16T07:00:00Z",
-
+    departure_time: "2024-12-16T01:00:00Z",
     route: mockRoutes[0], 
     transport_company: mockTransportCompanies[3],
     status: "scheduled",
