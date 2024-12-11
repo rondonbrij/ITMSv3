@@ -95,3 +95,20 @@ export interface PassengerInfo {
   seat_number: string;
 }
 
+export interface Announcement {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  date: string;
+  images: string[];
+  slug: string;
+}
+
+export interface PaginatedAnnouncements {
+  data: Announcement[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}

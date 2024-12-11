@@ -7,7 +7,6 @@ import { CalendarDays } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import { PaginatedAnnouncements } from "@/types/mocktypes";
-
+import { getAnnouncements } from "@/lib/mocks/mockannouncement";
 export default function AnnouncementsPage() {
   const [paginatedAnnouncements, setPaginatedAnnouncements] =
     useState<PaginatedAnnouncements | null>(null);

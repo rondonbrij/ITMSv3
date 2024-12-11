@@ -3,11 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Announcement } from "@/types/mocktypes";
+// import { Announcement } from "@/types/mocktypes";
 import {
   getAnnouncement,
   getOtherAnnouncements,
-} from "@/lib/mockfolder/mock-announcement";
+} from "@/lib/mocks/mockannouncement";
 
 async function AnnouncementContent({ slug }: { slug: string }) {
   const [announcement, otherAnnouncements] = await Promise.all([

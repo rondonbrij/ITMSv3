@@ -64,6 +64,7 @@ export default function PaymentPage() {
       <p>Dear ${primaryPassenger.firstName},</p>
       <p>Your booking has been confirmed. Here are the details:</p>
       <ul>
+        <li>Booking Code: ${booking.bookingCode}</li>
         <li>Trip Date: ${format(new Date(booking.tripDate), "MMMM d, yyyy")}</li>
         <li>Trip Time: ${booking.tripTime}</li>
         <li>Trip Route: Irawan to ${booking.checkpointName}</li>
@@ -200,11 +201,11 @@ export default function PaymentPage() {
               Your booking is confirmed and an e-ticket has been sent to your email.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex flex-col space-y-2">
-            <Button onClick={() => window.open(eTicketUrl, '_blank')}>
+          <AlertDialogFooter className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+            <Button onClick={() => window.open(eTicketUrl, '_blank')} className="bg-green-500 text-white">
               Download E-Ticket
             </Button>
-            <AlertDialogAction onClick={handleCloseConfirmation}>
+            <AlertDialogAction onClick={handleCloseConfirmation} className="bg-red-500 text-white">
               Close
             </AlertDialogAction>
           </AlertDialogFooter>

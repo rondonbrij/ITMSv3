@@ -16,14 +16,13 @@ function About() {
           </div>
           <div className="space-y-4">
             <p className="text-lg">
-              iWantSeats is the Philippines&apos; first real-time bus ticket
-              booking service. Trusted by established bus operators with
-              hundreds of branches nationwide, we provide convenient online
-              booking for your bus travel needs.
+              PPLTBooking is the Palawan&apos;s best bus and van ticket
+              booking service. Trusted by established transport vehicle operators. We provide convenient online
+              booking for your travel needs.
             </p>
             <p className="text-lg">
-              Beginning with popular routes of travel by bus from Manila to
-              Baguio and Sagada, we safely and reliably transport travelers
+              Beginning with popular routes of travel by van and bus from PPC to
+              North and South, we safely and reliably transport travelers
               nationwide.
             </p>
           </div>
